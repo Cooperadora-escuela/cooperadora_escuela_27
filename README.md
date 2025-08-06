@@ -47,7 +47,8 @@ pip install -r requirements.txt
 cp back/mysite/mysite/.env
 
 # Ejecutar migraciones
-python manage.py migrate
+python manage.py makemigrations  
+python manage.py migrate          
 
 # Crear superusuario
 python manage.py createsuperuser
