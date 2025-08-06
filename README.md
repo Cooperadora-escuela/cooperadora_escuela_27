@@ -20,7 +20,7 @@ Desarrollar una plataforma web que facilite:
 - Gestión de eventos y calendario
 - Administración de documentos
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Stack de Tecnologias
 | Componente       | Tecnología                |
 |------------------|---------------------------|
 | **Backend**      | Django (Python)           |
