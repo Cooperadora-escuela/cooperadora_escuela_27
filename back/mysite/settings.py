@@ -25,23 +25,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-oid1ss30=a%amea1noa%7)7ch=^f#e(1j0g#$_e@x78kc#@jmg'
+#SECRET_KEY = 'django-insecure-oid1ss30=a%amea1noa%7)7ch=^f#e(1j0g#$_e@x78kc#@jmg'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+   'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    "rest_framework",
+    "rest_framework_simplejwt",
+    'coreapi',
+    'django.contrib.sites',
+    #'allauth',
+    # 'allauth.account',
+    #'allauth.socialaccount',
+    # 'allauth.socialaccount.providers.google',
+    #'usuarios',
     'core',
 
 ]
@@ -56,9 +67,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
 ROOT_URLCONF = 'mysite.urls'
 
-AUTH_USER_MODEL = 'core.User' #modelo personalizado
+AUTH_USER_MODEL = 'core.Usuario'
 
 AUTHENTICATION_BACKENDS = [
     #'core.backends.EmailAuthBackend',
@@ -84,16 +102,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+SITE_ID = 1
 
 DATABASES = {
     "default": {

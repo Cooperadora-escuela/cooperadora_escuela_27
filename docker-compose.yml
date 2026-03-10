@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: cooperadora_db
+    restart: always
+    environment:
+      POSTGRES_DB: cooperadora_db
+      POSTGRES_USER: cooperadora_user
+      POSTGRES_PASSWORD: tu_password_segura
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cooperadora_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: cooperadora_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cooperadora.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - cooperadora_network
+
+  # backend:
+  #   build: ./back
+  #   container_name: cooperadora_backend
+  #   restart: always
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     DB_HOST: db
+  #     DB_NAME: cooperadora_db
+  #     DB_USER: cooperadora_user
+  #     DB_PASSWORD: tu_password_segura
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - ./back:/app
+  #   networks:
+  #     - cooperadora_network
+
+volumes:
+  postgres_data:
+
+networks:
+  cooperadora_network:
+    driver: bridge

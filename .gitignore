@@ -1,22 +1,117 @@
-### AL ###
-#Template for AL projects for Dynamics 365 Business Central
-#launch.json folder
+# Entorno virtual
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+*.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/
+*.pot
+*.pyc
+__pycache__
+*.mo
+local_settings.py
+
+# Base de datos
+*.sql
+*.sqlite
+*.sqlite3
+
+# IDE
 .vscode/
-#Cache folder
-.alcache/
-#Symbols folder
-.alpackages/
-#Snapshots folder
-.snapshots/
-#Testing Output folder
-.output/
-#Extension App-file
-*.app
-#Rapid Application Development File
-rad.json
-#Translation Base-file
-*.g.xlf
-#License-file
-*.flf
-#Test results file
-TestResults.xml
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.cache/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# Logs
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Secrets
+*.key
+*.pem
+.secrets/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Django Rest Framework
+api/__pycache__/
+*/__pycache__/
+
+# Uploads
+/media/
+/uploads/
+/mediafiles/
+
+# Static files
+/static_root/
+/staticfiles/
+/static/
+/collected_static/
+
+# Virtual environment
+pip-log.txt
+pip-delete-this-directory.txt
