@@ -7,8 +7,8 @@ services:
     restart: always
     environment:
       POSTGRES_DB: cooperadora_db
-      POSTGRES_USER: cooperadora_user
-      POSTGRES_PASSWORD: tu_password_segura
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:

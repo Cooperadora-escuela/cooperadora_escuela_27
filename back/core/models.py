@@ -1,4 +1,4 @@
-# back/usuarios/models.py
+# back/core/models.py
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 import uuid
