@@ -1,7 +1,7 @@
 # core/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario
+from .models import Usuario, Grado, Inscripcion, CuotaMensual, ConfiguracionAnual, Pago
 
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
@@ -35,3 +35,31 @@ class UsuarioAdmin(UserAdmin):
     
     # Ordenamiento por defecto
     ordering = ('email',)
+
+@admin.register(Grado)
+class GradoAdmin(admin.ModelAdmin):
+    list_display = ('numero', 'letra')
+    ordering = ('numero', 'letra')
+
+@admin.register(Inscripcion)
+class InscripcionAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'grado', 'anio', 'modalidad', 'activa')
+    list_filter = ('anio', 'modalidad', 'activa')
+    search_fields = ('usuario__nombre', 'usuario__apellido', 'usuario__dni')
+
+@admin.register(CuotaMensual)
+class CuotaMensualAdmin(admin.ModelAdmin):
+    list_display = ('anio', 'mes', 'monto', 'activa')
+    list_filter = ('anio', 'activa')
+    ordering = ('-anio', 'mes')
+
+@admin.register(ConfiguracionAnual)
+class ConfiguracionAnualAdmin(admin.ModelAdmin):
+    list_display = ('anio', 'monto', 'activa')
+
+@admin.register(Pago)
+class PagoAdmin(admin.ModelAdmin):
+    list_display = ('inscripcion', 'tipo', 'mes', 'anio', 'monto', 'fecha_pago')
+    list_filter = ('tipo', 'anio')
+    search_fields = ('inscripcion__usuario__nombre', 'inscripcion__usuario__apellido')
+    date_hierarchy = 'fecha_pago'
