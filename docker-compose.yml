@@ -21,8 +21,8 @@ services:
     container_name: cooperadora_pgadmin
     restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@cooperadora.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
     depends_on:
@@ -39,8 +39,8 @@ services:
   #   environment:
   #     DB_HOST: db
   #     DB_NAME: cooperadora_db
-  #     DB_USER: cooperadora_user
-  #     DB_PASSWORD: tu_password_segura
+  #     DB_USER: postgres
+  #     DB_PASSWORD: password
   #   depends_on:
   #     - db
   #   volumes:
