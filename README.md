@@ -24,10 +24,9 @@ Desarrollar una plataforma web que facilite:
 | Componente       | Tecnología                |
 |------------------|---------------------------|
 | **Backend**      | Django (Python)           |
-| **Frontend**     | React, Vite, Jsx          |
+| **Frontend**     | React, Nextjs, Tsx         |
 | **Base de datos**| Postgres                  |
 | **Autenticación**| Django.contrib.auth       |
-| **Despliegue**   | Git pages                 |
 
 ## 🚀 Instalación Local
 ```bash
@@ -35,7 +34,7 @@ Desarrollar una plataforma web que facilite:
 git clone [https://github.com/Cooperadora-escuela/cooperadora_escuela_27.git]
 cd cooperadora_escuela_27
 
-# Configurar entorno virtual (Python)
+# Configurar entorno virtual (Python 3.11)
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 .\venv\Scripts\activate   # Windows
