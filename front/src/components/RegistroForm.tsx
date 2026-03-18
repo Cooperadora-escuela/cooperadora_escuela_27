@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../contex/UserContex';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import HeaderForms from './HeaderForms';
+import FooterForms from './FooterForms';
 
 interface FormData {
   email: string;
@@ -113,183 +115,169 @@ const RegistroForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Crear usurio, Socio por defecto</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Nombre */}
-        <div>
-          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
-            Nombre *
-          </label>
-          <input
-            type="text"
-            id="nombre"
-            name="nombre"
-            value={formData.nombre}
-            onChange={handleChange}
-            required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              getFieldError('nombre') ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {getFieldError('nombre') && (
-            <p className="mt-1 text-sm text-red-600">{getFieldError('nombre')}</p>
-          )}
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-white flex flex-col items-center justify-start pt-16">
+      <HeaderForms subtitulo="Registro de nuevo socio" />
+      <div className="max-w-md w-full mx-auto p-6 bg-white rounded-lg shadow-md">
+        {/* <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Crear usuario, Socio por defecto</h2> */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Nombre */}
+          <div>
+            <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre *
+            </label>
+            <input
+              type="text"
+              id="nombre"
+              name="nombre"
+              value={formData.nombre}
+              onChange={handleChange}
+              required
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                getFieldError('nombre') ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {getFieldError('nombre') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('nombre')}</p>
+            )}
+          </div>
 
-        {/* Apellido */}
-        <div>
-          <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">
-            Apellido *
-          </label>
-          <input
-            type="text"
-            id="apellido"
-            name="apellido"
-            value={formData.apellido}
-            onChange={handleChange}
-            required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              getFieldError('apellido') ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {getFieldError('apellido') && (
-            <p className="mt-1 text-sm text-red-600">{getFieldError('apellido')}</p>
-          )}
-        </div>
+          {/* Apellido */}
+          <div>
+            <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 mb-1">
+              Apellido *
+            </label>
+            <input
+              type="text"
+              id="apellido"
+              name="apellido"
+              value={formData.apellido}
+              onChange={handleChange}
+              required
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                getFieldError('apellido') ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {getFieldError('apellido') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('apellido')}</p>
+            )}
+          </div>
 
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email *
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              getFieldError('email') ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {getFieldError('email') && (
-            <p className="mt-1 text-sm text-red-600">{getFieldError('email')}</p>
-          )}
-        </div>
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                getFieldError('email') ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {getFieldError('email') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('email')}</p>
+            )}
+          </div>
 
-        {/* DNI */}
-        <div>
-          <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-1">
-            DNI *
-          </label>
-          <input
-            type="text"
-            id="dni"
-            name="dni"
-            value={formData.dni}
-            onChange={handleChange}
-            required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              getFieldError('dni') ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {getFieldError('dni') && (
-            <p className="mt-1 text-sm text-red-600">{getFieldError('dni')}</p>
-          )}
-        </div>
+          {/* DNI */}
+          <div>
+            <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-1">
+              DNI *
+            </label>
+            <input
+              type="text"
+              id="dni"
+              name="dni"
+              value={formData.dni}
+              onChange={handleChange}
+              required
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                getFieldError('dni') ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {getFieldError('dni') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('dni')}</p>
+            )}
+          </div>
 
-        {/* Teléfono (opcional) */}
-        <div>
-          <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
-            Teléfono (opcional)
-          </label>
-          <input
-            type="tel"
-            id="telefono"
-            name="telefono"
-            value={formData.telefono}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              getFieldError('telefono') ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {getFieldError('telefono') && (
-            <p className="mt-1 text-sm text-red-600">{getFieldError('telefono')}</p>
-          )}
-        </div>
+          {/* Teléfono (opcional) */}
+          <div>
+            <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
+              Teléfono (opcional)
+            </label>
+            <input
+              type="tel"
+              id="telefono"
+              name="telefono"
+              value={formData.telefono}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                getFieldError('telefono') ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {getFieldError('telefono') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('telefono')}</p>
+            )}
+          </div>
 
-        {/* Contraseña */}
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Contraseña *
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength={6}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              getFieldError('password') || passwordMatchError ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {getFieldError('password') && (
-            <p className="mt-1 text-sm text-red-600">{getFieldError('password')}</p>
-          )}
-        </div>
+          {/* Contraseña */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña *
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              minLength={6}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                getFieldError('password') || passwordMatchError ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {getFieldError('password') && (
+              <p className="mt-1 text-sm text-red-600">{getFieldError('password')}</p>
+            )}
+          </div>
 
-        {/* Confirmar Contraseña */}
-        <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-            Confirmar Contraseña *
-          </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-              passwordMatchError ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          {passwordMatchError && (
-            <p className="mt-1 text-sm text-red-600">{passwordMatchError}</p>
-          )}
-        </div>
+          {/* Confirmar Contraseña */}
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar Contraseña *
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                passwordMatchError ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {passwordMatchError && (
+              <p className="mt-1 text-sm text-red-600">{passwordMatchError}</p>
+            )}
+          </div>
 
-        {/* Rol (opcional) - si quieres mostrarlo, descomenta */}
-        {/* <div>
-          <label htmlFor="rol" className="block text-sm font-medium text-gray-700 mb-1">
-            Rol (opcional)
-          </label>
-          <select
-            id="rol"
-            name="rol"
-            value={formData.rol}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+          {/* Botón de envío */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-300 disabled:cursor-not-allowed"
           >
-            <option value="SOC">Socio</option>
-            <option value="TES">Tesorero</option>
-            <option value="ADMIN">Administrador</option>
-          </select>
-        </div> */}
-
-        {/* Botón de envío */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors disabled:bg-purple-300 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Registrando...' : 'Registrarse'}
-        </button>
-      </form>
+            {loading ? 'Registrando...' : 'Registrarse'}
+          </button>
+        </form>
+      </div>
+      <FooterForms/>
     </div>
   );
 };

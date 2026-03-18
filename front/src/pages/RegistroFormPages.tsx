@@ -1,2 +1,11 @@
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import RegistroForm from "../components/RegistroForm"
+
+const RegistroFormPages = () => {
+  return (
+    <div>
+        <RegistroForm></RegistroForm>     
+    </div>
+  )
+}
+
+export default RegistroFormPages
