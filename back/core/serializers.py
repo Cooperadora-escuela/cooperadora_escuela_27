@@ -118,6 +118,35 @@ class PagoSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Ya existe un pago anual para esta inscripción.")
         return data
 
+# Serializer para pago simple (un mes) con lógica cuota + donación
+class PagoSimpleSerializer(serializers.Serializer):
+    inscripcion_id = serializers.IntegerField()
+    mes = serializers.IntegerField(min_value=1, max_value=12)
+    anio = serializers.IntegerField()
+    monto_total = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+    def validate(self, data):
+        try:
+            inscripcion = Inscripcion.objects.get(id=data['inscripcion_id'], anio=data['anio'])
+        except Inscripcion.DoesNotExist:
+            raise serializers.ValidationError("Inscripción no encontrada para ese año.")
+
+        if inscripcion.modalidad != 'mensual':
+            raise serializers.ValidationError("La inscripción no es de modalidad mensual.")
+
+        if Pago.objects.filter(inscripcion=inscripcion, tipo='mensual', mes=data['mes'], anio=data['anio']).exists():
+            raise serializers.ValidationError("Ya existe un pago registrado para ese mes.")
+
+        try:
+            cuota = CuotaMensual.objects.get(anio=data['anio'], mes=data['mes'], activa=True)
+        except CuotaMensual.DoesNotExist:
+            raise serializers.ValidationError(f"No hay cuota definida para ese mes y año.")
+
+        self.context['inscripcion'] = inscripcion
+        self.context['cuota'] = cuota
+        return data
+
+
 # Serializer para el pago múltiple (varios meses)
 class PagoMultipleSerializer(serializers.Serializer):
     inscripcion_id = serializers.IntegerField()

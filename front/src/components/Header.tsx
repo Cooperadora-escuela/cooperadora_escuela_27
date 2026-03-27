@@ -1,5 +1,6 @@
 // src/components/Header.tsx
 import { Link, NavLink } from 'react-router-dom';
+import Avatar from './Avatar';
 
 const Header: React.FC = () => {
   return (
@@ -7,11 +8,11 @@ const Header: React.FC = () => {
       <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo / Título */}
         <Link to="/" className="text-xl font-bold text-purple-600">
-          Mi App
+          COOPERADORA 27 DE 4
         </Link>
 
         {/* Enlaces de navegación */}
-        <div className="flex space-x-4">
+        {/* <div className="flex space-x-4">
           <NavLink
             to="/about"
             className={({ isActive }) =>
@@ -48,12 +49,10 @@ const Header: React.FC = () => {
           >
             Login
           </NavLink>
-        </div>
+        </div> */}
 
         {/* Avatar placeholder (se reemplazará después) */}
-        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold">
-          U
-        </div>
+        <Avatar/>
       </nav>
     </header>
   );

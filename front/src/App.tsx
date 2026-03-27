@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import HomePages from './pages/HomePages';
 import RegistroForm from './components/RegistroForm';
 import LoginFormPages from './pages/LoginFormPages';
+import PagosPage from './pages/PagosPage';
 //import AboutPages from './pages/AboutPages';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/about" element={<HomePages />} />
         <Route path="/registro" element={<RegistroForm />} />
         <Route path='/login' element={<LoginFormPages />} />
+        <Route path='/pagos' element={<PagosPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import { useAuth } from '../contex/UserContex';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // 👈 Agregamos useNavigate
 import HeaderForms from './HeaderForms'; 
 import FooterForms from './FooterForms';
 
 const LoginForm: React.FC = () => {
     const { login } = useAuth();
+    const navigate = useNavigate(); // 👈 Hook para redirigir
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -27,7 +28,7 @@ const LoginForm: React.FC = () => {
             const result = await login(formData.email, formData.password);
             if (result.success) {
                 toast.success('¡Login exitoso!');
-                //navigate('/dashboard');
+                navigate('/about'); // 👈 Redirige a /about
             } else {
                 const errorMsg = result.error?.message || 'Credenciales inválidas. Intenta de nuevo.';
                 toast.error(errorMsg);
