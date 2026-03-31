@@ -13,6 +13,7 @@ from .models import Grado, Inscripcion, Pago, CuotaMensual
 from .serializers import (
     UsuarioCreateSerializer,
     UsuarioSerializer,
+    UsuarioHijoSerializer,
     UsuarioLoginSerializer,
     GradoSerializer,
     InscripcionSerializer,
@@ -70,6 +71,18 @@ class UsuarioLoginView(APIView):
         user_data = UsuarioSerializer(user).data
         return Response({**tokens, 'user': user_data}, status=status.HTTP_200_OK)
     
+
+class MisHijosView(generics.ListAPIView):
+    """
+    Retorna los alumnos (SOCIO) vinculados al padre autenticado,
+    con sus inscripciones y pagos.
+    """
+    serializer_class = UsuarioHijoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Usuario.objects.filter(padre=self.request.user)
+
 
 class GradoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Grado.objects.all()

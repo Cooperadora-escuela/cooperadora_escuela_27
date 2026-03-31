@@ -9,9 +9,33 @@ from django.contrib.auth import authenticate
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['uuid', 'email', 'dni', 'nombre', 'apellido', 
+        fields = ['uuid', 'email', 'dni', 'nombre', 'apellido',
                   'rol', 'telefono', 'activo', 'fecha_registro']
         read_only_fields = ['uuid', 'fecha_registro']
+
+class UsuarioCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    padre_id = serializers.PrimaryKeyRelatedField(
+        queryset=Usuario.objects.filter(rol='PAD'),
+        source='padre',
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        model = Usuario
+        fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol', 'telefono', 'padre_id']
+
+    def validate(self, data):
+        rol = data.get('rol', 'SOC')
+        email = data.get('email')
+        padre = data.get('padre')
+
+        if rol == 'PAD' and not email:
+            raise serializers.ValidationError({'email': 'El email es obligatorio para usuarios con rol Padre.'})
+        if rol == 'SOC' and not padre:
+            raise serializers.ValidationError({'padre_id': 'El alumno debe tener un padre/tutor asignado.'})
+        return data
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -20,17 +44,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
-
-class UsuarioCreateSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    
-    class Meta:
-        model = Usuario
-        fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol']
-    
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super().create(validated_data)
     
 class UsuarioLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -59,13 +72,13 @@ class GradoSerializer(serializers.ModelSerializer):
         model = Grado
         fields = '__all__'
 
-class UsuarioSerializer(serializers.ModelSerializer):
+class UsuarioHijoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['uuid', 'nombre', 'apellido', 'dni', 'email', 'rol']
+        fields = ['uuid', 'nombre', 'apellido', 'dni', 'rol']
 
 class InscripcionSerializer(serializers.ModelSerializer):
-    usuario = UsuarioSerializer(read_only=True)
+    usuario = UsuarioHijoSerializer(read_only=True)
     usuario_id = serializers.PrimaryKeyRelatedField(
         queryset=Usuario.objects.all(),
         source='usuario',

@@ -14,6 +14,7 @@ urlpatterns = [
     path('login/', views.UsuarioLoginView.as_view(), name='login'),
     path('usuarios/', views.UsuarioListView.as_view(), name='usuario-list'),
     path('usuarios/<uuid:uuid>/', views.UsuarioDetailView.as_view(), name='usuario-detail'),
+    path('mis-hijos/', views.MisHijosView.as_view(), name='mis-hijos'),
 ]
 
 # Agregamos las rutas del router

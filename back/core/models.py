@@ -17,10 +17,9 @@ class Rol(models.TextChoices):
     MIEMBRO = 'MIE', 'Miembro Cooperadora'
 
 class UsuarioManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('El email es obligatorio')
-        email = self.normalize_email(email)
+    def create_user(self, email=None, password=None, **extra_fields):
+        if email:
+            email = self.normalize_email(email)
         extra_fields.setdefault('activo', True)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -63,8 +62,16 @@ class Usuario(AbstractUser):
     # Campos personalizados
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    
+    email = models.EmailField(unique=True, null=True, blank=True)
+    padre = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='hijos',
+        limit_choices_to={'rol': Rol.PADRE}
+    )
+
     # Configuración
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['dni', 'nombre', 'apellido']
