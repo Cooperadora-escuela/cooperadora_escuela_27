@@ -1,0 +1,73 @@
+// Cooperadora Escuela 27 - ERD
+// Generado desde back/core/models.py
+// Editar en https://dbdiagram.io
+
+Table usuarios {
+  id integer [pk, increment]
+  uuid uuid [unique, not null]
+  email varchar [unique, not null]
+  dni varchar(20) [unique, not null]
+  nombre varchar(100) [not null]
+  apellido varchar(100) [not null]
+  telefono varchar(20)
+  rol varchar(5) [not null, note: 'ADMIN | PRES | TES | SEC | REV | DOC | SOC | PAD | MIE']
+  activo boolean [default: true]
+  fecha_registro timestamp
+  is_staff boolean
+  is_superuser boolean
+}
+
+Table grados {
+  id integer [pk, increment]
+  numero smallint [not null, note: '1 a 7']
+  letra char(1) [note: 'A, B, C (opcional)']
+
+  indexes {
+    (numero, letra) [unique]
+  }
+}
+
+Table inscripciones {
+  id integer [pk, increment]
+  usuario_id integer [ref: > usuarios.id, not null]
+  grado_id integer [ref: > grados.id, not null]
+  anio integer [not null]
+  activa boolean [default: true]
+  modalidad varchar(10) [not null, note: 'mensual | anual']
+  fecha_inscripcion timestamp
+  observaciones text
+
+  indexes {
+    (usuario_id, anio) [unique]
+  }
+}
+
+Table cuotas_mensuales {
+  id integer [pk, increment]
+  anio integer [not null]
+  mes smallint [not null, note: '3=Marzo ... 12=Diciembre']
+  monto decimal(10,2) [not null]
+  activa boolean [default: true]
+
+  indexes {
+    (anio, mes) [unique]
+  }
+}
+
+Table configuraciones_anuales {
+  id integer [pk, increment]
+  anio integer [unique, not null]
+  monto decimal(10,2) [not null]
+  activa boolean [default: true]
+}
+
+Table pagos {
+  id integer [pk, increment]
+  inscripcion_id integer [ref: > inscripciones.id, not null]
+  tipo varchar(10) [not null, note: 'mensual | anual | donacion']
+  mes smallint [null, note: 'Solo para tipo=mensual']
+  anio integer [not null]
+  monto decimal(10,2) [not null]
+  fecha_pago timestamp
+  observaciones text
+}

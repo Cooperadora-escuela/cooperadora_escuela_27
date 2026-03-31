@@ -1,57 +1,113 @@
-# Plataforma de Comunicación para Cooperadora Escolar
+# Sistema de Gestión - Cooperadora Escuela 27
 
-## 📌 Objetivo del Proyecto
-Desarrollar una plataforma web que facilite:
-1. **Comunicación con padres**: Acceso centralizado a información escolar
-2. **Gestión para cooperadora**: Herramientas administrativas para miembros
+## Objetivo
 
-## ✨ Características Principales
+Plataforma web para la gestión de pagos, inscripciones y socios de la Cooperadora Escolar N°27. Permite al Tesorero registrar pagos y alumnos, y a los padres consultar el historial de pagos de sus hijos.
 
-### 👨‍👩‍👧‍👦 Sección Pública (Padres)
-- Visualización de noticias y eventos escolares
-- Calendario académico interactivo
-- Documentos y recursos compartidos
-- Foro de la comunidad educativa
+## Funcionalidades
 
-### 👥 Área Administrativa (Cooperadora)
-- **Autenticación segura** para miembros
-- Panel de gestión de contenidos
-- Sistema de publicación de noticias
-- Gestión de eventos y calendario
-- Administración de documentos
+### Tesorero / Admin
+- Registro de alumnos y vinculación con su padre/tutor
+- Inscripción de alumnos a grados por año
+- Registro de pagos: cuota mensual, pago anual o donación
+- Pago de múltiples meses en una sola operación
+- Configuración de montos de cuotas por mes y año
 
-## 🛠️ Stack de Tecnologias
-| Componente       | Tecnología                |
-|------------------|---------------------------|
-| **Backend**      | Django (Python)           |
-| **Frontend**     | React, Nextjs, Tsx         |
-| **Base de datos**| Postgres                  |
-| **Autenticación**| Django.contrib.auth       |
+### Padre / Tutor
+- Login con email para consultar el historial de pagos de sus hijos
+- Visualización de cuotas pagas y pendientes
 
-## 🚀 Instalación Local
+## Stack tecnológico
+
+| Componente        | Tecnología                        |
+|-------------------|-----------------------------------|
+| **Backend**       | Django 5 + Django REST Framework  |
+| **Frontend**      | React 19 + TypeScript + Vite      |
+| **Base de datos** | PostgreSQL 15                     |
+| **Autenticación** | JWT (djangorestframework-simplejwt)|
+| **Estilos**       | Tailwind CSS + Material UI        |
+| **Contenedores**  | Docker + Docker Compose           |
+
+## Estructura del proyecto
+
+```
+cooperadora_escuela_27/
+├── back/          # API Django REST
+├── front/         # Frontend React + TypeScript
+├── docs/
+│   ├── db/        # Diagrama ERD (erd.dbml + db_diagrama.png)
+│   └── flujos/    # Diagramas de flujo de negocio
+└── docker-compose.yml
+```
+
+## Instalación local
+
+### Requisitos
+- Docker y Docker Compose
+- Python 3.11+
+- Node.js 18+
+
+### Base de datos y pgAdmin (Docker)
+
 ```bash
-# Clonar repositorio
-git clone [https://github.com/Cooperadora-escuela/cooperadora_escuela_27.git]
-cd cooperadora_escuela_27
+docker compose up -d postgres pgadmin
+```
 
-# Configurar entorno virtual (Python 3.11)
+- PostgreSQL disponible en `localhost:5432`
+- pgAdmin disponible en `http://localhost:5050`
+  - Email: `cooperadora@cooperadora.com`
+  - Password: `cooperadora`
+
+### Backend (Django)
+
+```bash
+# Crear entorno virtual
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-.\venv\Scripts\activate   # Windows
 
 # Instalar dependencias
-pip install -r requirements.txt
+pip install -r back/requirements.txt
 
-# Configurar variables de entorno
-cp back/mysite/mysite/.env
+# Variables de entorno
+cp back/.env.example back/.env  # completar con tus valores
 
-# Ejecutar migraciones
-python manage.py makemigrations  
-python manage.py migrate          
+# Migraciones
+python back/manage.py migrate
 
 # Crear superusuario
-python manage.py createsuperuser
+python back/manage.py createsuperuser
 
 # Iniciar servidor
-python manage.py runserver
+python back/manage.py runserver
+```
 
+API disponible en `http://localhost:8000/api/`
+
+### Frontend (React)
+
+```bash
+cd front
+npm install
+npm run dev
+```
+
+Frontend disponible en `http://localhost:5173`
+
+## Roles del sistema
+
+| Rol        | Código | Descripción                              |
+|------------|--------|------------------------------------------|
+| Admin      | ADMIN  | Acceso total                             |
+| Presidente | PRES   | Presidente de la cooperadora             |
+| Tesorero   | TES    | Gestión de pagos e inscripciones         |
+| Secretario | SEC    | Secretario                               |
+| Revisor    | REV    | Revisor de cuentas                       |
+| Docente    | DOC    | Docente                                  |
+| Socio      | SOC    | Alumno inscripto                         |
+| Padre      | PAD    | Padre/tutor (acceso al historial de pagos)|
+| Miembro    | MIE    | Miembro de la cooperadora                |
+
+## Documentación
+
+- [Diagrama ERD](docs/db/erd.dbml) — editable en dbdiagram.io
+- [Flujo de pagos](docs/flujos/pagos.md)

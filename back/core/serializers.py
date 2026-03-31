@@ -9,9 +9,33 @@ from django.contrib.auth import authenticate
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['uuid', 'email', 'dni', 'nombre', 'apellido', 
+        fields = ['uuid', 'email', 'dni', 'nombre', 'apellido',
                   'rol', 'telefono', 'activo', 'fecha_registro']
         read_only_fields = ['uuid', 'fecha_registro']
+
+class UsuarioCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    padre_id = serializers.PrimaryKeyRelatedField(
+        queryset=Usuario.objects.filter(rol='PAD'),
+        source='padre',
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        model = Usuario
+        fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol', 'telefono', 'padre_id']
+
+    def validate(self, data):
+        rol = data.get('rol', 'SOC')
+        email = data.get('email')
+        padre = data.get('padre')
+
+        if rol == 'PAD' and not email:
+            raise serializers.ValidationError({'email': 'El email es obligatorio para usuarios con rol Padre.'})
+        if rol == 'SOC' and not padre:
+            raise serializers.ValidationError({'padre_id': 'El alumno debe tener un padre/tutor asignado.'})
+        return data
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -20,17 +44,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
         return user
-
-class UsuarioCreateSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    
-    class Meta:
-        model = Usuario
-        fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol']
-    
-    def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])
-        return super().create(validated_data)
     
 class UsuarioLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -59,13 +72,13 @@ class GradoSerializer(serializers.ModelSerializer):
         model = Grado
         fields = '__all__'
 
-class UsuarioSerializer(serializers.ModelSerializer):
+class UsuarioHijoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ['uuid', 'nombre', 'apellido', 'dni', 'email', 'rol']
+        fields = ['uuid', 'nombre', 'apellido', 'dni', 'rol']
 
 class InscripcionSerializer(serializers.ModelSerializer):
-    usuario = UsuarioSerializer(read_only=True)
+    usuario = UsuarioHijoSerializer(read_only=True)
     usuario_id = serializers.PrimaryKeyRelatedField(
         queryset=Usuario.objects.all(),
         source='usuario',
@@ -117,6 +130,35 @@ class PagoSerializer(serializers.ModelSerializer):
             if Pago.objects.filter(inscripcion=data['inscripcion'], tipo='anual').exists():
                 raise serializers.ValidationError("Ya existe un pago anual para esta inscripción.")
         return data
+
+# Serializer para pago simple (un mes) con lógica cuota + donación
+class PagoSimpleSerializer(serializers.Serializer):
+    inscripcion_id = serializers.IntegerField()
+    mes = serializers.IntegerField(min_value=1, max_value=12)
+    anio = serializers.IntegerField()
+    monto_total = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+    def validate(self, data):
+        try:
+            inscripcion = Inscripcion.objects.get(id=data['inscripcion_id'], anio=data['anio'])
+        except Inscripcion.DoesNotExist:
+            raise serializers.ValidationError("Inscripción no encontrada para ese año.")
+
+        if inscripcion.modalidad != 'mensual':
+            raise serializers.ValidationError("La inscripción no es de modalidad mensual.")
+
+        if Pago.objects.filter(inscripcion=inscripcion, tipo='mensual', mes=data['mes'], anio=data['anio']).exists():
+            raise serializers.ValidationError("Ya existe un pago registrado para ese mes.")
+
+        try:
+            cuota = CuotaMensual.objects.get(anio=data['anio'], mes=data['mes'], activa=True)
+        except CuotaMensual.DoesNotExist:
+            raise serializers.ValidationError(f"No hay cuota definida para ese mes y año.")
+
+        self.context['inscripcion'] = inscripcion
+        self.context['cuota'] = cuota
+        return data
+
 
 # Serializer para el pago múltiple (varios meses)
 class PagoMultipleSerializer(serializers.Serializer):

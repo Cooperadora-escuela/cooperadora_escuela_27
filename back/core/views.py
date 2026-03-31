@@ -13,12 +13,14 @@ from .models import Grado, Inscripcion, Pago, CuotaMensual
 from .serializers import (
     UsuarioCreateSerializer,
     UsuarioSerializer,
+    UsuarioHijoSerializer,
     UsuarioLoginSerializer,
     GradoSerializer,
     InscripcionSerializer,
     PagoSerializer,
     PagoMultipleSerializer,
-    PagoAnualSerializer
+    PagoAnualSerializer,
+    PagoSimpleSerializer,
 )
 from .permissions import EsTesoreroOAdmin  # asumimos que existe
 
@@ -70,6 +72,18 @@ class UsuarioLoginView(APIView):
         return Response({**tokens, 'user': user_data}, status=status.HTTP_200_OK)
     
 
+class MisHijosView(generics.ListAPIView):
+    """
+    Retorna los alumnos (SOCIO) vinculados al padre autenticado,
+    con sus inscripciones y pagos.
+    """
+    serializer_class = UsuarioHijoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Usuario.objects.filter(padre=self.request.user)
+
+
 class GradoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Grado.objects.all()
     serializer_class = GradoSerializer
@@ -87,15 +101,70 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
 class PagoViewSet(viewsets.ModelViewSet):
-    queryset = Pago.objects.all()
     serializer_class = PagoSerializer
 
+    def get_queryset(self):
+        queryset = Pago.objects.all()
+        mes = self.request.query_params.get('mes')
+        anio = self.request.query_params.get('anio')
+        if mes:
+            queryset = queryset.filter(mes=mes)
+        if anio:
+            queryset = queryset.filter(anio=anio)
+        return queryset
+
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'pago_multiple', 'pago_anual']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'pago_multiple', 'pago_anual', 'pago_simple']:
             permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+    @action(detail=False, methods=['post'], url_path='pago-simple')
+    def pago_simple(self, request):
+        serializer = PagoSimpleSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        inscripcion = serializer.context['inscripcion']
+        cuota = serializer.context['cuota']
+        mes = serializer.validated_data['mes']
+        anio = serializer.validated_data['anio']
+        monto_total = serializer.validated_data['monto_total']
+
+        with transaction.atomic():
+            if monto_total >= cuota.monto:
+                Pago.objects.create(
+                    inscripcion=inscripcion,
+                    tipo='mensual',
+                    mes=mes,
+                    anio=anio,
+                    monto=cuota.monto,
+                    observaciones=f"Pago cuota {cuota.get_mes_display()} {anio}"
+                )
+                mensaje = f"Cuota de {cuota.get_mes_display()} registrada (${cuota.monto})."
+                if monto_total > cuota.monto:
+                    excedente = monto_total - cuota.monto
+                    Pago.objects.create(
+                        inscripcion=inscripcion,
+                        tipo='donacion',
+                        mes=None,
+                        anio=anio,
+                        monto=excedente,
+                        observaciones=f"Excedente pago {cuota.get_mes_display()} {anio}"
+                    )
+                    mensaje += f" Excedente de ${excedente} registrado como donación."
+            else:
+                Pago.objects.create(
+                    inscripcion=inscripcion,
+                    tipo='donacion',
+                    mes=None,
+                    anio=anio,
+                    monto=monto_total,
+                    observaciones=f"Pago insuficiente para cuota {cuota.get_mes_display()} {anio} (cuota: ${cuota.monto})"
+                )
+                mensaje = f"El monto no cubre la cuota (${cuota.monto}). Se registró como donación."
+
+        return Response({"mensaje": mensaje}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'], url_path='pago-multiple')
     def pago_multiple(self, request):
