@@ -1,0 +1,18 @@
+flowchart TD
+    A([Tesorero ingresa al sistema]) --> B[Accede al formulario\nCrear usuario]
+
+    B --> C{¿Qué tipo de usuario?}
+
+    C -->|Padre / Tutor| D[Ingresa nombre, apellido,\nDNI, email y contraseña]
+    D --> E[Sistema crea cuenta PAD]
+    E --> F([Padre recibe credenciales\ny puede iniciar sesión])
+
+    C -->|Alumno| G[Ingresa nombre, apellido,\nDNI y email del padre]
+    G --> H{¿Existe un PAD\ncon ese email?}
+
+    H -->|No| I[/Error: debe crear\nal padre primero/]
+    H -->|Sí| J[Selecciona grado, año\ny modalidad de pago]
+
+    J --> K[Sistema crea cuenta SOC\ny la vincula al padre]
+    K --> L[Sistema genera\nInscripción automáticamente]
+    L --> M([Alumno aparece disponible\nen el formulario de pagos])

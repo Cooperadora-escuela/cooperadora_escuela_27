@@ -1,0 +1,81 @@
+name: Build and push Docker images
+
+on:
+  push:
+    branches:
+      - docker
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  build-back:
+    name: Back (Django)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/cooperadora-back
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./back
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-front:
+    name: Front (React)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/cooperadora-front
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./front
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
