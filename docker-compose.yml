@@ -13,7 +13,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"               # Expone el puerto en tu host (opcional)
+      - "5433:5432"               # 5433 en host → 5432 en contenedor
     volumes:
       - postgres_data:/var/lib/postgresql/data   # Persistencia de datos
     networks:
@@ -26,28 +26,38 @@ services:
       PGADMIN_DEFAULT_EMAIL: cooperadora@cooperadora.com
       PGADMIN_DEFAULT_PASSWORD: cooperadora
     ports:
-      - "5050:80"                  # Accedes a pgAdmin en http://localhost:5050
+      - "5051:80"                  # Accedes a pgAdmin en http://localhost:5051
     depends_on:
       - postgres
     networks:
       - cooperadora_network
 
   api:
-    build: ./back                       # Usa el Dockerfile en el directorio actual
+    image: ghcr.io/cooperadora-escuela/cooperadora-back:latest
     container_name: cooperadora_api
     ports:
-      - "8000:8000"                # Accedes a la API en http://localhost:8000
+      - "8000:8000"
     environment:
       - SECRET_KEY=django-insecure-oid1ss30=a%amea1noa%7)7ch=^f#e(1j0g#$_e@x78kc#@jmg
       - DB_ENGINE=django.db.backends.postgresql
       - DB_NAME=cooperadora_db
       - DB_USER=postgres
       - DB_PASSWORD=postgres
-      - DB_HOST=postgres            # Nombre del servicio, no 127.0.0.1
+      - DB_HOST=postgres
       - DB_PORT=5432
-      - DEBUG=1                     # Opcional, para modo desarrollo
+      - DEBUG=1
     depends_on:
       - postgres
+    networks:
+      - cooperadora_network
+
+  front:
+    image: ghcr.io/cooperadora-escuela/cooperadora-front:latest
+    container_name: cooperadora_front
+    ports:
+      - "80:80"
+    depends_on:
+      - api
     networks:
       - cooperadora_network
 

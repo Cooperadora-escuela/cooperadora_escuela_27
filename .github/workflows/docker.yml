@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/cooperadora-back
+          images: ${{ env.REGISTRY }}/cooperadora-escuela/cooperadora-back
           tags: |
             type=raw,value=latest
             type=sha,prefix=
@@ -67,7 +67,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/cooperadora-front
+          images: ${{ env.REGISTRY }}/cooperadora-escuela/cooperadora-front
           tags: |
             type=raw,value=latest
             type=sha,prefix=
