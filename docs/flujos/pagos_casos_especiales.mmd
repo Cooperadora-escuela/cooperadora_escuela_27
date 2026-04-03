@@ -1,0 +1,11 @@
+flowchart TD
+    A([Padre quiere pagar\nvarios meses juntos]) --> B[Tesorero usa\npago múltiple]
+    B --> C[Selecciona alumno +\nrango de meses]
+    C --> D[Sistema registra un\npago por cada mes]
+    D --> E([Se genera recibo])
+
+    F([Padre quiere pagar\ntodo el año junto]) --> G{¿La inscripción\nes modalidad anual?}
+    G -->|No| H[/No permitido:\ncambiar modalidad\na mitad de año/]
+    G -->|Sí| I[Tesorero usa\npago anual]
+    I --> J[Sistema valida que\nexista ConfiguracionAnual]
+    J --> K([Se genera recibo])

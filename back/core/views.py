@@ -24,14 +24,16 @@ from .serializers import (
 )
 from .permissions import EsTesoreroOAdmin  # asumimos que existe
 
-class RegistroView(generics.CreateAPIView):
+class CrearUsuarioView(generics.CreateAPIView):
     """
-    Vista para registrar un nuevo usuario.
-    Permite POST con los datos del usuario.
+    Crea un nuevo usuario (PAD o SOC).
+    Solo accesible para Tesorero y Admin.
+    - rol=PAD: requiere email, nombre, apellido, dni
+    - rol=SOC: requiere email_padre (debe existir un PAD con ese email)
     """
     queryset = Usuario.objects.all()
     serializer_class = UsuarioCreateSerializer
-    permission_classes = [permissions.AllowAny]  # Permitir acceso público
+    permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
 
 class UsuarioDetailView(generics.RetrieveUpdateDestroyAPIView):
     """

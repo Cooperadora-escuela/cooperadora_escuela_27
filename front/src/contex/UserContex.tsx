@@ -21,13 +21,19 @@ interface LoginResponse {
 }
 
 interface RegisterData {
-  email: string;
-  password: string;
   nombre: string;
   apellido: string;
   dni: string;
   rol?: string;
   telefono?: string;
+  // PAD
+  email?: string;
+  password?: string;
+  // SOC
+  email_padre?: string;
+  grado_id?: number;
+  anio?: number;
+  modalidad?: string;
 }
 
 interface RegisterResponse {
@@ -125,17 +131,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Registro (mejorado para devolver errores)
+  // Crear usuario (solo Tesorero/Admin)
   const registro = async (userData: RegisterData): Promise<{ success: boolean; data?: RegisterResponse; error?: any }> => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/registro/', {
+      const response = await authFetch('http://127.0.0.1:8000/api/usuarios/crear/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
       const data = await response.json();
       if (!response.ok) {
-        return { success: false, error: data }; // devolvemos el objeto de error
+        return { success: false, error: data };
       }
       return { success: true, data };
     } catch (error) {

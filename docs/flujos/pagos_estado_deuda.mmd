@@ -1,0 +1,4 @@
+flowchart LR
+    A[Consulta de pagos\npor alumno/mes] --> B{¿Existe registro\nde Pago?}
+    B -->|Sí| C[Pagado]
+    B -->|No| D[Sin pago registrado\npuede ser deuda o\npendiente de carga]

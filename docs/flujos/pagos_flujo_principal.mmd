@@ -1,0 +1,20 @@
+flowchart TD
+    A([Padre realiza el pago\nen efectivo]) --> B[Tesorero ingresa al sistema]
+    B --> C{¿Qué tipo de pago?}
+
+    C -->|Cuota mensual| D[Selecciona alumno + mes/es]
+    C -->|Pago anual| E[Selecciona alumno + año]
+    C -->|Donación| F[Ingresa monto libre]
+
+    D --> G{¿El alumno tiene\ninscripción activa?}
+    E --> G
+    F --> G
+
+    G -->|No| H[/Error: el alumno\nno está inscripto/]
+    G -->|Sí| I{¿Ya existe ese\npago registrado?}
+
+    I -->|Sí| J[/Error: pago duplicado/]
+    I -->|No| K[Sistema registra el pago]
+
+    K --> L[Se genera recibo de pago]
+    L --> M([Tesorero entrega recibo al Padre])

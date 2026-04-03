@@ -15,34 +15,64 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 class UsuarioCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    padre_id = serializers.PrimaryKeyRelatedField(
-        queryset=Usuario.objects.filter(rol='PAD'),
-        source='padre',
-        required=False,
-        allow_null=True
+    email_padre = serializers.EmailField(write_only=True, required=False, allow_null=True)
+    grado_id = serializers.PrimaryKeyRelatedField(
+        queryset=Grado.objects.all(), required=False, allow_null=True, write_only=True
+    )
+    anio = serializers.IntegerField(required=False, write_only=True)
+    modalidad = serializers.ChoiceField(
+        choices=['mensual', 'anual'], required=False, default='mensual', write_only=True
     )
 
     class Meta:
         model = Usuario
-        fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol', 'telefono', 'padre_id']
+        fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol', 'telefono',
+                  'email_padre', 'grado_id', 'anio', 'modalidad']
 
     def validate(self, data):
         rol = data.get('rol', 'SOC')
-        email = data.get('email')
-        padre = data.get('padre')
 
-        if rol == 'PAD' and not email:
-            raise serializers.ValidationError({'email': 'El email es obligatorio para usuarios con rol Padre.'})
-        if rol == 'SOC' and not padre:
-            raise serializers.ValidationError({'padre_id': 'El alumno debe tener un padre/tutor asignado.'})
+        if rol == 'PAD':
+            if not data.get('email'):
+                raise serializers.ValidationError({'email': 'El email es obligatorio para el padre/tutor.'})
+
+        if rol == 'SOC':
+            email_padre = data.get('email_padre')
+            if not email_padre:
+                raise serializers.ValidationError({'email_padre': 'Debe indicar el email del padre/tutor.'})
+            try:
+                data['padre'] = Usuario.objects.get(email=email_padre, rol='PAD')
+            except Usuario.DoesNotExist:
+                raise serializers.ValidationError(
+                    {'email_padre': f'No existe un padre/tutor con el email "{email_padre}". Créelo primero.'}
+                )
+            if not data.get('grado_id'):
+                raise serializers.ValidationError({'grado_id': 'Debe asignar un grado al alumno.'})
+            if not data.get('anio'):
+                raise serializers.ValidationError({'anio': 'Debe indicar el año de inscripción.'})
+
         return data
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
+        validated_data.pop('email_padre', None)
+        grado = validated_data.pop('grado_id', None)
+        anio = validated_data.pop('anio', None)
+        modalidad = validated_data.pop('modalidad', 'mensual')
+
         user = super().create(validated_data)
         if password:
             user.set_password(password)
             user.save()
+
+        if grado and anio:
+            Inscripcion.objects.create(
+                usuario=user,
+                grado=grado,
+                anio=anio,
+                modalidad=modalidad,
+            )
+
         return user
     
 class UsuarioLoginSerializer(serializers.Serializer):
