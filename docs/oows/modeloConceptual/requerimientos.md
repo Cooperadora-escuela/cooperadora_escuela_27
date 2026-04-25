@@ -24,6 +24,29 @@
 | RF12  | Configurar cuota mensual      | Permite definir el monto de la cuota para un mes y año específico. |
 | RF13  | Configurar pago anual         | Permite definir el monto del pago anual para un año específico. |
 
+### E01 — Comunicaciones (Secretario)
+
+| ID    | Nombre                  | Descripción |
+|-------|-------------------------|-------------|
+| RF14  | Crear publicación       | El Secretario puede crear publicaciones de tipo noticia, agenda o novedad, con título, contenido y fecha. |
+| RF15  | Editar publicación      | El Secretario puede editar una publicación existente. |
+| RF16  | Eliminar publicación    | El Secretario puede eliminar una publicación. |
+| RF17  | Listar publicaciones    | Todos los usuarios autenticados pueden ver el listado de publicaciones ordenadas por fecha. |
+| RF18  | Ver detalle publicación | Todos los usuarios autenticados pueden ver el contenido completo de una publicación. |
+
+### E02 — Estado de cuenta (Padre)
+
+| ID    | Nombre                  | Descripción |
+|-------|-------------------------|-------------|
+| RF19  | Ver estado de cuenta    | El padre autenticado puede ver el estado de cuenta de cada hijo a cargo: cuotas pagas, pendientes y donaciones del año en curso. |
+
+### Expansiones futuras (fuera del MVP)
+
+| ID    | Nombre                       | Descripción |
+|-------|------------------------------|-------------|
+| RF-F1 | Factura electrónica          | Generar comprobante fiscal al registrar un pago. |
+| RF-F2 | Envío de recibo por email    | Enviar automáticamente el recibo al padre tras registrar un pago. |
+
 ---
 
 ## 2. Restricciones
@@ -42,6 +65,8 @@
 | R10  | Si el monto abonado no cubre la cuota, se registra íntegramente como donación. |
 | R11  | Solo se puede vincular como padre a un usuario con rol PADRE. |
 | R12  | Para registrar pago anual debe existir una ConfiguracionAnual activa para ese año. |
+| R13  | Solo el Secretario y Admin pueden crear, editar o eliminar publicaciones. |
+| R14  | Los padres solo pueden ver publicaciones y estado de cuenta, no modificar nada. |
 
 ---
 

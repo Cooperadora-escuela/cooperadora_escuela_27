@@ -64,6 +64,17 @@
 │ monto: decimal       │    │ activa: bool         │
 │ activa: bool         │    └──────────────────────┘
 └──────────────────────┘
+
+┌─────────────────────────────────────┐
+│            Publicacion              │
+├─────────────────────────────────────┤
+│ titulo: str                         │
+│ contenido: text                     │
+│ tipo: noticia|agenda|novedad        │
+│ autor → Usuario (rol=SEC o ADMIN)   │
+│ fecha_publicacion: datetime         │
+│ activa: bool                        │
+└─────────────────────────────────────┘
 ```
 
 ---
