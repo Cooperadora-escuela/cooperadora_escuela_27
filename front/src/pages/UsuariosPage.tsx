@@ -66,7 +66,7 @@ const UsuariosPage: React.FC = () => {
   const fetchUsuarios = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('${API_URL}/api/usuarios/');
+      const res = await authFetch(`${API_URL}/api/usuarios/`);
       const data = await res.json();
       setUsuarios(data);
     } finally {

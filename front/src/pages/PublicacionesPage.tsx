@@ -43,7 +43,7 @@ const PublicacionesPage: React.FC = () => {
   const fetchPublicaciones = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('${API_URL}/api/publicaciones/');
+      const res = await authFetch(`${API_URL}/api/publicaciones/`);
       const data = await res.json();
       setPublicaciones(data.results ?? data);
     } finally {
@@ -77,7 +77,7 @@ const PublicacionesPage: React.FC = () => {
     try {
       const url = editando
         ? `${API_URL}/api/publicaciones/${editando.id}/`
-        : '${API_URL}/api/publicaciones/';
+        : `${API_URL}/api/publicaciones/`;
       const method = editando ? 'PUT' : 'POST';
       const res = await authFetch(url, { method, body: JSON.stringify(form) });
       if (!res.ok) {

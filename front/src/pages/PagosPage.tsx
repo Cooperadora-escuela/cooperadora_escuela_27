@@ -98,7 +98,7 @@ export default function PagosPage() {
 
   const fetchGrados = async () => {
     try {
-      const response = await authFetch('${API_URL}/api/grados/');
+      const response = await authFetch(`${API_URL}/api/grados/`);
       if (!response.ok) return;
       const data = await response.json();
       setGrados(data.sort((a: Grado, b: Grado) => a.numero - b.numero || (a.letra ?? '').localeCompare(b.letra ?? '')));
@@ -107,7 +107,7 @@ export default function PagosPage() {
 
   const fetchInscripciones = async () => {
     try {
-      const response = await authFetch('${API_URL}/api/inscripciones/');
+      const response = await authFetch(`${API_URL}/api/inscripciones/`);
       if (!response.ok) return;
       const data = await response.json();
       setInscripciones(data);
@@ -125,7 +125,7 @@ export default function PagosPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await authFetch('${API_URL}/api/pagos/pago-simple/', {
+      const response = await authFetch(`${API_URL}/api/pagos/pago-simple/`, {
         method: 'POST',
         body: JSON.stringify({
           inscripcion_id: parseInt(formPago.inscripcion_id),

@@ -59,7 +59,7 @@ const RegistroForm: React.FC = () => {
   const fetchGrados = async () => {
     if (grados.length > 0) return;
     try {
-      const res = await authFetch('${API_URL}/api/grados/');
+      const res = await authFetch(`${API_URL}/api/grados/`);
       if (res.ok) setGrados(await res.json());
     } catch {}
   };

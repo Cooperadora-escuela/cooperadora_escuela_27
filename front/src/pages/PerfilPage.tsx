@@ -42,7 +42,7 @@ export default function PerfilPage() {
     e.preventDefault();
     setSavingPerfil(true);
     try {
-      const res = await authFetch('${API_URL}/api/me/', {
+      const res = await authFetch(`${API_URL}/api/me/`, {
         method: 'PATCH',
         body: JSON.stringify({ nombre, apellido, telefono }),
       });
@@ -68,7 +68,7 @@ export default function PerfilPage() {
     }
     setSavingPass(true);
     try {
-      const res = await authFetch('${API_URL}/api/cambiar-password/', {
+      const res = await authFetch(`${API_URL}/api/cambiar-password/`, {
         method: 'POST',
         body: JSON.stringify({ password_actual: passActual, password_nuevo: passNuevo }),
       });

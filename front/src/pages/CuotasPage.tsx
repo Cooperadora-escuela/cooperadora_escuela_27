@@ -87,7 +87,7 @@ export default function CuotasPage() {
             method: 'PATCH',
             body: JSON.stringify({ monto: body.monto, activa: body.activa }),
           })
-        : await authFetch('${API_URL}/api/cuotas/', {
+        : await authFetch(`${API_URL}/api/cuotas/`, {
             method: 'POST',
             body: JSON.stringify(body),
           });

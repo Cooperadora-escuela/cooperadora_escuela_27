@@ -31,7 +31,7 @@ const MisHijosPage: React.FC = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await authFetch('${API_URL}/api/mis-hijos/');
+        const res = await authFetch(`${API_URL}/api/mis-hijos/`);
         const data = await res.json();
         setHijos(data);
       } finally {
