@@ -30,7 +30,7 @@ interface RegisterData {
   email?: string;
   password?: string;
   // SOC
-  email_padre?: string;
+  dni_padre?: string;
   grado_id?: number;
   anio?: number;
   modalidad?: string;
@@ -57,7 +57,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isTesorero: boolean;
+  isSecretario: boolean;
   isSocio: boolean;
+  isPadre: boolean;
   loading: boolean;
 }
 
@@ -215,7 +217,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isAdmin: user?.rol === 'ADMIN',
     isTesorero: user?.rol === 'TES',
+    isSecretario: user?.rol === 'SEC',
     isSocio: user?.rol === 'SOC',
+    isPadre: user?.rol === 'PAD',
     loading,
   };
 
