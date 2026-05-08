@@ -3,12 +3,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Usuario
-from .permissions import EsTesoreroOAdmin
+from .models import Usuario, Publicacion
+from .permissions import EsTesoreroOAdmin, EsSecretarioOAdmin
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
+from django.utils import timezone
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Grado, Inscripcion, Pago, CuotaMensual
 from .serializers import (
     UsuarioCreateSerializer,
@@ -21,8 +24,10 @@ from .serializers import (
     PagoMultipleSerializer,
     PagoAnualSerializer,
     PagoSimpleSerializer,
+    PublicacionSerializer,
+    EstadoCuentaHijoSerializer,
+    CuotaMensualSerializer,
 )
-from .permissions import EsTesoreroOAdmin  # asumimos que existe
 
 class CrearUsuarioView(generics.CreateAPIView):
     """
@@ -75,15 +80,31 @@ class UsuarioLoginView(APIView):
     
 
 class MisHijosView(generics.ListAPIView):
-    """
-    Retorna los alumnos (SOCIO) vinculados al padre autenticado,
-    con sus inscripciones y pagos.
-    """
     serializer_class = UsuarioHijoSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Usuario.objects.filter(padre=self.request.user)
+
+
+class EstadoCuentaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        anio = int(request.query_params.get('anio', timezone.now().year))
+        hijos = Usuario.objects.filter(padre=request.user)
+        serializer = EstadoCuentaHijoSerializer(hijos, many=True, context={'anio': anio})
+        return Response(serializer.data)
+
+
+class PublicacionViewSet(viewsets.ModelViewSet):
+    queryset = Publicacion.objects.all()
+    serializer_class = PublicacionSerializer
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), EsSecretarioOAdmin()]
+        return [IsAuthenticated()]
 
 
 class GradoViewSet(viewsets.ReadOnlyModelViewSet):
@@ -106,13 +127,27 @@ class PagoViewSet(viewsets.ModelViewSet):
     serializer_class = PagoSerializer
 
     def get_queryset(self):
+        from django.db.models import Q
         queryset = Pago.objects.all()
         mes = self.request.query_params.get('mes')
         anio = self.request.query_params.get('anio')
+        tipo = self.request.query_params.get('tipo')
+        grado = self.request.query_params.get('grado')
+        busqueda = self.request.query_params.get('busqueda')
         if mes:
             queryset = queryset.filter(mes=mes)
         if anio:
             queryset = queryset.filter(anio=anio)
+        if tipo:
+            queryset = queryset.filter(tipo=tipo)
+        if grado:
+            queryset = queryset.filter(inscripcion__grado_id=grado)
+        if busqueda:
+            queryset = queryset.filter(
+                Q(inscripcion__usuario__apellido__icontains=busqueda) |
+                Q(inscripcion__usuario__nombre__icontains=busqueda) |
+                Q(inscripcion__usuario__dni__icontains=busqueda)
+            )
         return queryset
 
     def get_permissions(self):
@@ -242,3 +277,49 @@ class PagoViewSet(viewsets.ModelViewSet):
 
         response_serializer = PagoSerializer(pago)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(UsuarioSerializer(request.user).data)
+
+    def patch(self, request):
+        allowed = {k: v for k, v in request.data.items() if k in ('nombre', 'apellido', 'telefono')}
+        serializer = UsuarioSerializer(request.user, data=allowed, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CambiarPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        password_actual = request.data.get('password_actual', '')
+        password_nuevo = request.data.get('password_nuevo', '')
+
+        if not request.user.check_password(password_actual):
+            return Response({'password_actual': 'La contraseña actual es incorrecta.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_password(password_nuevo, user=request.user)
+        except DjangoValidationError as e:
+            return Response({'password_nuevo': list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        request.user.set_password(password_nuevo)
+        request.user.save()
+        return Response({'detail': 'Contraseña actualizada correctamente.'})
+
+
+class CuotaMensualViewSet(viewsets.ModelViewSet):
+    serializer_class = CuotaMensualSerializer
+    permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
+
+    def get_queryset(self):
+        queryset = CuotaMensual.objects.all()
+        anio = self.request.query_params.get('anio')
+        if anio:
+            queryset = queryset.filter(anio=anio)
+        return queryset

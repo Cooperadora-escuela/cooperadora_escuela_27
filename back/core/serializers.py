@@ -2,20 +2,60 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario
+from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, MESES_CICLO  # noqa: F401
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    padre_email = serializers.SerializerMethodField()
+    padre_dni = serializers.SerializerMethodField()
+    padre_nombre = serializers.SerializerMethodField()
+    padre_apellido = serializers.SerializerMethodField()
+    dni_padre = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
+
     class Meta:
         model = Usuario
         fields = ['uuid', 'email', 'dni', 'nombre', 'apellido',
-                  'rol', 'telefono', 'activo', 'fecha_registro']
+                  'rol', 'telefono', 'activo', 'fecha_registro',
+                  'padre_email', 'padre_dni', 'padre_nombre', 'padre_apellido', 'dni_padre']
         read_only_fields = ['uuid', 'fecha_registro']
+
+    def get_padre_email(self, obj):
+        return obj.padre.email if obj.padre else None
+
+    def get_padre_dni(self, obj):
+        return obj.padre.dni if obj.padre else None
+
+    def get_padre_nombre(self, obj):
+        return obj.padre.nombre if obj.padre else None
+
+    def get_padre_apellido(self, obj):
+        return obj.padre.apellido if obj.padre else None
+
+    def update(self, instance, validated_data):
+        dni_padre = validated_data.pop('dni_padre', None)
+        instance = super().update(instance, validated_data)
+
+        if 'dni_padre' in self.initial_data and instance.rol == 'SOC':
+            if dni_padre:
+                try:
+                    padre = Usuario.objects.get(dni=dni_padre, rol='PAD')
+                    instance.padre = padre
+                except Usuario.DoesNotExist:
+                    raise serializers.ValidationError(
+                        {'dni_padre': f'No existe un padre/tutor con el DNI "{dni_padre}".'}
+                    )
+            else:
+                instance.padre = None
+            instance.save(update_fields=['padre'])
+
+        return instance
 
 class UsuarioCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    email_padre = serializers.EmailField(write_only=True, required=False, allow_null=True)
+    dni_padre = serializers.CharField(write_only=True, required=False, allow_null=True, allow_blank=True)
     grado_id = serializers.PrimaryKeyRelatedField(
         queryset=Grado.objects.all(), required=False, allow_null=True, write_only=True
     )
@@ -27,35 +67,39 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ['email', 'password', 'dni', 'nombre', 'apellido', 'rol', 'telefono',
-                  'email_padre', 'grado_id', 'anio', 'modalidad']
+                  'dni_padre', 'grado_id', 'anio', 'modalidad']
 
     def validate(self, data):
         rol = data.get('rol', 'SOC')
 
-        if rol == 'PAD':
-            if not data.get('email'):
-                raise serializers.ValidationError({'email': 'El email es obligatorio para el padre/tutor.'})
-
         if rol == 'SOC':
-            email_padre = data.get('email_padre')
-            if not email_padre:
-                raise serializers.ValidationError({'email_padre': 'Debe indicar el email del padre/tutor.'})
-            try:
-                data['padre'] = Usuario.objects.get(email=email_padre, rol='PAD')
-            except Usuario.DoesNotExist:
-                raise serializers.ValidationError(
-                    {'email_padre': f'No existe un padre/tutor con el email "{email_padre}". Créelo primero.'}
-                )
+            dni_padre = data.get('dni_padre')
+            if dni_padre:
+                try:
+                    data['padre'] = Usuario.objects.get(dni=dni_padre, rol='PAD')
+                except Usuario.DoesNotExist:
+                    raise serializers.ValidationError(
+                        {'dni_padre': f'No existe un padre/tutor con el DNI "{dni_padre}".'}
+                    )
             if not data.get('grado_id'):
                 raise serializers.ValidationError({'grado_id': 'Debe asignar un grado al alumno.'})
             if not data.get('anio'):
                 raise serializers.ValidationError({'anio': 'Debe indicar el año de inscripción.'})
+        else:
+            if not data.get('email'):
+                raise serializers.ValidationError({'email': 'El email es obligatorio para este tipo de usuario.'})
+            if not data.get('password'):
+                raise serializers.ValidationError({'password': 'La contraseña es obligatoria.'})
+            try:
+                validate_password(data['password'])
+            except DjangoValidationError as e:
+                raise serializers.ValidationError({'password': list(e.messages)})
 
         return data
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        validated_data.pop('email_padre', None)
+        validated_data.pop('dni_padre', None)
         grado = validated_data.pop('grado_id', None)
         anio = validated_data.pop('anio', None)
         modalidad = validated_data.pop('modalidad', 'mensual')
@@ -102,10 +146,20 @@ class GradoSerializer(serializers.ModelSerializer):
         model = Grado
         fields = '__all__'
 
+class InscripcionResumenSerializer(serializers.ModelSerializer):
+    grado = serializers.StringRelatedField()
+
+    class Meta:
+        model = Inscripcion
+        fields = ['id', 'grado', 'anio', 'modalidad', 'activa', 'fecha_inscripcion']
+
+
 class UsuarioHijoSerializer(serializers.ModelSerializer):
+    inscripciones = InscripcionResumenSerializer(many=True, read_only=True)
+
     class Meta:
         model = Usuario
-        fields = ['uuid', 'nombre', 'apellido', 'dni', 'rol']
+        fields = ['uuid', 'nombre', 'apellido', 'dni', 'rol', 'inscripciones']
 
 class InscripcionSerializer(serializers.ModelSerializer):
     usuario = UsuarioHijoSerializer(read_only=True)
@@ -115,6 +169,7 @@ class InscripcionSerializer(serializers.ModelSerializer):
         write_only=True
     )
     grado = serializers.PrimaryKeyRelatedField(queryset=Grado.objects.all())
+    grado_detalle = GradoSerializer(source='grado', read_only=True)
 
     class Meta:
         model = Inscripcion
@@ -233,6 +288,85 @@ class PagoMultipleSerializer(serializers.Serializer):
         self.context['cuotas'] = cuotas
         self.context['inscripcion'] = inscripcion
         return data
+
+class CuotaMensualSerializer(serializers.ModelSerializer):
+    nombre_mes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CuotaMensual
+        fields = ['id', 'anio', 'mes', 'nombre_mes', 'monto', 'activa']
+
+    def get_nombre_mes(self, obj):
+        return obj.get_mes_display()
+
+
+class PublicacionSerializer(serializers.ModelSerializer):
+    autor_nombre = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Publicacion
+        fields = ['id', 'titulo', 'contenido', 'tipo', 'fecha', 'autor', 'autor_nombre']
+        read_only_fields = ['fecha', 'autor']
+
+    def get_autor_nombre(self, obj):
+        if obj.autor:
+            return f"{obj.autor.nombre} {obj.autor.apellido}"
+        return None
+
+    def create(self, validated_data):
+        validated_data['autor'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class EstadoCuentaHijoSerializer(serializers.Serializer):
+    uuid = serializers.UUIDField()
+    nombre = serializers.CharField()
+    apellido = serializers.CharField()
+    dni = serializers.CharField()
+    inscripcion = serializers.SerializerMethodField()
+    cuotas_pagas = serializers.SerializerMethodField()
+    cuotas_pendientes = serializers.SerializerMethodField()
+    donaciones = serializers.SerializerMethodField()
+
+    def _get_inscripcion(self, obj):
+        anio = self.context.get('anio')
+        return obj.inscripciones.filter(anio=anio).first()
+
+    def get_inscripcion(self, obj):
+        ins = self._get_inscripcion(obj)
+        if not ins:
+            return None
+        return {
+            'id': ins.id,
+            'grado': str(ins.grado),
+            'anio': ins.anio,
+            'modalidad': ins.modalidad,
+        }
+
+    def get_cuotas_pagas(self, obj):
+        ins = self._get_inscripcion(obj)
+        if not ins:
+            return []
+        pagos = ins.pagos.filter(tipo='mensual').order_by('mes')
+        return [{'mes': p.mes, 'nombre_mes': p.get_mes_display(), 'monto': str(p.monto), 'fecha_pago': p.fecha_pago} for p in pagos]
+
+    def get_cuotas_pendientes(self, obj):
+        ins = self._get_inscripcion(obj)
+        if not ins or ins.modalidad != 'mensual':
+            return []
+        anio = self.context.get('anio')
+        meses_pagados = set(ins.pagos.filter(tipo='mensual', anio=anio).values_list('mes', flat=True))
+        cuotas = CuotaMensual.objects.filter(anio=anio, activa=True).exclude(mes__in=meses_pagados).order_by('mes')
+        meses_dict = dict(MESES_CICLO)
+        return [{'mes': c.mes, 'nombre_mes': meses_dict.get(c.mes, ''), 'monto': str(c.monto)} for c in cuotas]
+
+    def get_donaciones(self, obj):
+        ins = self._get_inscripcion(obj)
+        if not ins:
+            return []
+        pagos = ins.pagos.filter(tipo='donacion').order_by('-fecha_pago')
+        return [{'monto': str(p.monto), 'fecha_pago': p.fecha_pago, 'observaciones': p.observaciones} for p in pagos]
+
 
 # Serializer para pago anual (simple, con validación)
 class PagoAnualSerializer(serializers.Serializer):

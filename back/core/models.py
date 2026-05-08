@@ -165,6 +165,32 @@ class Inscripcion(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+
+class Publicacion(models.Model):
+    TIPO_CHOICES = [
+        ('noticia', 'Noticia'),
+        ('agenda', 'Agenda'),
+        ('novedad', 'Novedad'),
+    ]
+    titulo = models.CharField(max_length=200)
+    contenido = models.TextField()
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='noticia')
+    fecha = models.DateTimeField(auto_now_add=True)
+    autor = models.ForeignKey(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='publicaciones'
+    )
+
+    class Meta:
+        ordering = ['-fecha']
+        verbose_name = "Publicación"
+        verbose_name_plural = "Publicaciones"
+
+    def __str__(self):
+        return self.titulo
+
 class CuotaMensual(models.Model):
     """Define el monto de la cuota para un mes y año específicos (global para todos los grados)."""
     anio = models.PositiveIntegerField()

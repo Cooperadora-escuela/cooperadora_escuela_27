@@ -11,3 +11,10 @@ class EsTesoreroOAdmin(permissions.BasePermission):
             return False
         # Verificar el rol
         return request.user.rol in ['TES', 'ADMIN']
+
+
+class EsSecretarioOAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        return request.user.rol in ['SEC', 'ADMIN']
