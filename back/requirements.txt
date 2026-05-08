@@ -1,3 +1,4 @@
+setuptools
 gunicorn==23.0.0
 whitenoise==6.9.0
 Django==5.1.6
