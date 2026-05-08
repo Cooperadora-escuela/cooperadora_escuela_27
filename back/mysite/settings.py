@@ -79,12 +79,12 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'api'] + os.getenv('ALLOWED_HOSTS', '
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost',
-]
+] + [o for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o]
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost',
-]
+] + [o for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o]
 
 CORS_ALLOW_CREDENTIALS = True
 
