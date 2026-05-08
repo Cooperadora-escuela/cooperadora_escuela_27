@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { API_URL } from '../config';
 
 import { toast } from 'react-toastify';
 
@@ -65,7 +66,7 @@ const UsuariosPage: React.FC = () => {
   const fetchUsuarios = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('http://127.0.0.1:8000/api/usuarios/');
+      const res = await authFetch('${API_URL}/api/usuarios/');
       const data = await res.json();
       setUsuarios(data);
     } finally {
@@ -99,7 +100,7 @@ const UsuariosPage: React.FC = () => {
     if (!detalle || !form) return;
     setGuardando(true);
     try {
-      const res = await authFetch(`http://127.0.0.1:8000/api/usuarios/${detalle.uuid}/`, {
+      const res = await authFetch(`${API_URL}/api/usuarios/${detalle.uuid}/`, {
         method: 'PATCH',
         body: JSON.stringify(form),
       });
@@ -119,7 +120,7 @@ const UsuariosPage: React.FC = () => {
   };
 
   const eliminar = async (uuid: string) => {
-    const res = await authFetch(`http://127.0.0.1:8000/api/usuarios/${uuid}/`, { method: 'DELETE' });
+    const res = await authFetch(`${API_URL}/api/usuarios/${uuid}/`, { method: 'DELETE' });
     if (res.ok) {
       setUsuarios((prev) => prev.filter((u) => u.uuid !== uuid));
       setDetalle(null);

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contex/UserContex';
+import { API_URL } from '../config';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -58,7 +59,7 @@ const RegistroForm: React.FC = () => {
   const fetchGrados = async () => {
     if (grados.length > 0) return;
     try {
-      const res = await authFetch('http://127.0.0.1:8000/api/grados/');
+      const res = await authFetch('${API_URL}/api/grados/');
       if (res.ok) setGrados(await res.json());
     } catch {}
   };

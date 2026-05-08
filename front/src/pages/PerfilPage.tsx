@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { API_URL } from '../config';
 import { toast } from 'react-toastify';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
@@ -41,7 +42,7 @@ export default function PerfilPage() {
     e.preventDefault();
     setSavingPerfil(true);
     try {
-      const res = await authFetch('http://127.0.0.1:8000/api/me/', {
+      const res = await authFetch('${API_URL}/api/me/', {
         method: 'PATCH',
         body: JSON.stringify({ nombre, apellido, telefono }),
       });
@@ -67,7 +68,7 @@ export default function PerfilPage() {
     }
     setSavingPass(true);
     try {
-      const res = await authFetch('http://127.0.0.1:8000/api/cambiar-password/', {
+      const res = await authFetch('${API_URL}/api/cambiar-password/', {
         method: 'POST',
         body: JSON.stringify({ password_actual: passActual, password_nuevo: passNuevo }),
       });

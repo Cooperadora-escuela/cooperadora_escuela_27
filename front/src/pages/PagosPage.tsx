@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contex/UserContex';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 import { toast } from 'react-toastify';
 
 interface Grado {
@@ -97,7 +98,7 @@ export default function PagosPage() {
 
   const fetchGrados = async () => {
     try {
-      const response = await authFetch('http://127.0.0.1:8000/api/grados/');
+      const response = await authFetch('${API_URL}/api/grados/');
       if (!response.ok) return;
       const data = await response.json();
       setGrados(data.sort((a: Grado, b: Grado) => a.numero - b.numero || (a.letra ?? '').localeCompare(b.letra ?? '')));
@@ -106,7 +107,7 @@ export default function PagosPage() {
 
   const fetchInscripciones = async () => {
     try {
-      const response = await authFetch('http://127.0.0.1:8000/api/inscripciones/');
+      const response = await authFetch('${API_URL}/api/inscripciones/');
       if (!response.ok) return;
       const data = await response.json();
       setInscripciones(data);
@@ -124,7 +125,7 @@ export default function PagosPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const response = await authFetch('http://127.0.0.1:8000/api/pagos/pago-simple/', {
+      const response = await authFetch('${API_URL}/api/pagos/pago-simple/', {
         method: 'POST',
         body: JSON.stringify({
           inscripcion_id: parseInt(formPago.inscripcion_id),
@@ -161,7 +162,7 @@ export default function PagosPage() {
       if (filtroGradoLista) params.append('grado', filtroGradoLista);
       if (filtroBusqueda) params.append('busqueda', filtroBusqueda);
 
-      const response = await authFetch(`http://127.0.0.1:8000/api/pagos/?${params}`);
+      const response = await authFetch(`${API_URL}/api/pagos/?${params}`);
       if (!response.ok) throw new Error('Error al obtener pagos');
       const data = await response.json();
       setPagos(data);

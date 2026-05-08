@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { API_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -62,7 +63,7 @@ export default function CuotasPage() {
 
   useEffect(() => {
     setLoading(true);
-    authFetch(`http://127.0.0.1:8000/api/cuotas/?anio=${anio}`)
+    authFetch(`${API_URL}/api/cuotas/?anio=${anio}`)
       .then((r) => r.json())
       .then((data: Cuota[]) => inicializarFilas(data))
       .catch(() => toast.error('Error al cargar cuotas.'))
@@ -82,11 +83,11 @@ export default function CuotasPage() {
     try {
       const body = { anio, mes, monto: parseFloat(fila.monto), activa: fila.activa };
       const res = fila.id
-        ? await authFetch(`http://127.0.0.1:8000/api/cuotas/${fila.id}/`, {
+        ? await authFetch(`${API_URL}/api/cuotas/${fila.id}/`, {
             method: 'PATCH',
             body: JSON.stringify({ monto: body.monto, activa: body.activa }),
           })
-        : await authFetch('http://127.0.0.1:8000/api/cuotas/', {
+        : await authFetch('${API_URL}/api/cuotas/', {
             method: 'POST',
             body: JSON.stringify(body),
           });
@@ -115,7 +116,7 @@ export default function CuotasPage() {
     }
     setFila(mes, { guardando: true });
     try {
-      const res = await authFetch(`http://127.0.0.1:8000/api/cuotas/${fila.id}/`, {
+      const res = await authFetch(`${API_URL}/api/cuotas/${fila.id}/`, {
         method: 'PATCH',
         body: JSON.stringify({ activa: !fila.activa }),
       });

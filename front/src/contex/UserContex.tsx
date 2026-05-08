@@ -1,6 +1,7 @@
 // AuthContext.tsx
 import { createContext, useState, useEffect, useContext } from 'react';
 import type { ReactNode } from 'react';
+import { API_URL } from '../config';
 
 // Definir los tipos
 interface User {
@@ -115,7 +116,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Login
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any }> => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/login/', { // 👈 URL corregida
+      const response = await fetch('${API_URL}/api/login/', { // 👈 URL corregida
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -136,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Crear usuario (solo Tesorero/Admin)
   const registro = async (userData: RegisterData): Promise<{ success: boolean; data?: RegisterResponse; error?: any }> => {
     try {
-      const response = await authFetch('http://127.0.0.1:8000/api/usuarios/crear/', {
+      const response = await authFetch('${API_URL}/api/usuarios/crear/', {
         method: 'POST',
         body: JSON.stringify(userData),
       });
@@ -164,7 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshAccessToken = async (): Promise<boolean> => {
     if (!refreshToken) return false;
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
+      const response = await fetch('${API_URL}/api/token/refresh/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh: refreshToken }),

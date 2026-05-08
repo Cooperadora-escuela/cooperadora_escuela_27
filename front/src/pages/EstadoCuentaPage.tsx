@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { API_URL } from '../config';
 
 
 interface CuotaPaga {
@@ -49,7 +50,7 @@ const EstadoCuentaPage: React.FC = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await authFetch(`http://127.0.0.1:8000/api/estado-cuenta/?anio=${anio}`);
+        const res = await authFetch(`${API_URL}/api/estado-cuenta/?anio=${anio}`);
         const data = await res.json();
         setHijos(data);
       } finally {

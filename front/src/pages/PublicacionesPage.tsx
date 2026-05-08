@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { API_URL } from '../config';
 
 
 interface Publicacion {
@@ -42,7 +43,7 @@ const PublicacionesPage: React.FC = () => {
   const fetchPublicaciones = async () => {
     setLoading(true);
     try {
-      const res = await authFetch('http://127.0.0.1:8000/api/publicaciones/');
+      const res = await authFetch('${API_URL}/api/publicaciones/');
       const data = await res.json();
       setPublicaciones(data.results ?? data);
     } finally {
@@ -75,8 +76,8 @@ const PublicacionesPage: React.FC = () => {
     setError(null);
     try {
       const url = editando
-        ? `http://127.0.0.1:8000/api/publicaciones/${editando.id}/`
-        : 'http://127.0.0.1:8000/api/publicaciones/';
+        ? `${API_URL}/api/publicaciones/${editando.id}/`
+        : '${API_URL}/api/publicaciones/';
       const method = editando ? 'PUT' : 'POST';
       const res = await authFetch(url, { method, body: JSON.stringify(form) });
       if (!res.ok) {
@@ -93,7 +94,7 @@ const PublicacionesPage: React.FC = () => {
 
   const eliminar = async (id: number) => {
     if (!confirm('¿Eliminar esta publicación?')) return;
-    await authFetch(`http://127.0.0.1:8000/api/publicaciones/${id}/`, { method: 'DELETE' });
+    await authFetch(`${API_URL}/api/publicaciones/${id}/`, { method: 'DELETE' });
     setDetalle(null);
     fetchPublicaciones();
   };
