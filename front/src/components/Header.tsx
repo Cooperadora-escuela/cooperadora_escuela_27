@@ -12,7 +12,7 @@ interface NavItem {
 
 const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthenticated, isAdmin, isTesorero, isPadre } = useAuth();
+  const { isAuthenticated, isAdmin, isPresidente, isTesorero, isPadre } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const canManage = isAdmin || isTesorero;
@@ -26,6 +26,11 @@ const Header: React.FC = () => {
     ] : canManage ? [
       { name: 'Usuarios', path: '/usuarios' },
       { name: 'Pagos', path: '/pagos' },
+      { name: 'Cuotas', path: '/cuotas' },
+      { name: 'Nuevo usuario', path: '/registro' },
+      { name: 'Publicaciones', path: '/publicaciones' },
+    ] : isPresidente ? [
+      { name: 'Usuarios', path: '/usuarios' },
       { name: 'Cuotas', path: '/cuotas' },
       { name: 'Nuevo usuario', path: '/registro' },
       { name: 'Publicaciones', path: '/publicaciones' },

@@ -36,15 +36,15 @@ type FilaCuota = {
 };
 
 export default function CuotasPage() {
-  const { authFetch, isAdmin, isTesorero, loading: authLoading } = useAuth();
+  const { authFetch, isAdmin, isPresidente, isTesorero, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [anio, setAnio] = useState(new Date().getFullYear());
   const [filas, setFilas] = useState<Record<number, FilaCuota>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !isAdmin && !isTesorero) navigate('/');
-  }, [authLoading, isAdmin, isTesorero, navigate]);
+    if (!authLoading && !isAdmin && !isTesorero && !isPresidente) navigate('/');
+  }, [authLoading, isAdmin, isTesorero, isPresidente, navigate]);
 
   const inicializarFilas = useCallback((cuotas: Cuota[]) => {
     const mapa: Record<number, FilaCuota> = {};

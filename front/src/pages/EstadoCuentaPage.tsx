@@ -10,12 +10,6 @@ interface CuotaPaga {
   fecha_pago: string;
 }
 
-interface CuotaPendiente {
-  mes: number;
-  nombre_mes: string;
-  monto: string;
-}
-
 interface Donacion {
   monto: string;
   fecha_pago: string;
@@ -36,7 +30,6 @@ interface EstadoHijo {
   dni: string;
   inscripcion: InscripcionResumen | null;
   cuotas_pagas: CuotaPaga[];
-  cuotas_pendientes: CuotaPendiente[];
   donaciones: Donacion[];
 }
 
@@ -109,44 +102,23 @@ const EstadoCuentaPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="px-6 py-4">
                   {/* Cuotas pagas */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Cuotas pagas ({hijo.cuotas_pagas.length})
-                    </h3>
-                    {hijo.cuotas_pagas.length === 0 ? (
-                      <p className="text-xs text-gray-400">Ninguna</p>
-                    ) : (
-                      <ul className="space-y-1">
-                        {hijo.cuotas_pagas.map((c) => (
-                          <li key={c.mes} className="flex justify-between text-xs">
-                            <span className="text-gray-700 dark:text-gray-300">{c.nombre_mes}</span>
-                            <span className="text-green-600 font-medium">${c.monto}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  {/* Cuotas pendientes */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Cuotas pendientes ({hijo.cuotas_pendientes.length})
-                    </h3>
-                    {hijo.cuotas_pendientes.length === 0 ? (
-                      <p className="text-xs text-green-600 font-medium">Al día</p>
-                    ) : (
-                      <ul className="space-y-1">
-                        {hijo.cuotas_pendientes.map((c) => (
-                          <li key={c.mes} className="flex justify-between text-xs">
-                            <span className="text-gray-700 dark:text-gray-300">{c.nombre_mes}</span>
-                            <span className="text-red-500 font-medium">${c.monto}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Cuotas pagas ({hijo.cuotas_pagas.length})
+                  </h3>
+                  {hijo.cuotas_pagas.length === 0 ? (
+                    <p className="text-xs text-gray-400">Ninguna</p>
+                  ) : (
+                    <ul className="space-y-1">
+                      {hijo.cuotas_pagas.map((c) => (
+                        <li key={c.mes} className="flex justify-between text-xs">
+                          <span className="text-gray-700 dark:text-gray-300">{c.nombre_mes}</span>
+                          <span className="text-green-600 font-medium">${c.monto}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
 
                 {/* Donaciones */}

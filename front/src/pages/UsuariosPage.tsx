@@ -49,8 +49,8 @@ const ROL_COLOR: Record<string, string> = {
 };
 
 const UsuariosPage: React.FC = () => {
-  const { authFetch, isAdmin, isTesorero } = useAuth();
-  const canManage = isAdmin || isTesorero;
+  const { authFetch, isAdmin, isPresidente, isTesorero } = useAuth();
+  const canManage = isAdmin || isTesorero || isPresidente;
 
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
