@@ -38,7 +38,7 @@ export default function PerfilPage() {
     { label: 'Las contraseñas coinciden', ok: passConfirm.length > 0 && passNuevo === passConfirm },
   ];
 
-  const handleGuardarPerfil = async (e: React.FormEvent) => {
+  const handleGuardarPerfil = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSavingPerfil(true);
     try {
@@ -59,7 +59,7 @@ export default function PerfilPage() {
     }
   };
 
-  const handleCambiarPassword = async (e: React.FormEvent) => {
+  const handleCambiarPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPassErrors({});
     if (passNuevo !== passConfirm) {
@@ -149,7 +149,7 @@ export default function PerfilPage() {
             <div>
               <label className={labelClass}>Email</label>
               <input type="email" value={user?.email ?? ''} disabled className={readonlyClass} />
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">El email no se puede modificar.</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Para cambiar el email contactá al administrador.</p>
             </div>
 
             <div>
