@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 
 # Router para los ViewSets
@@ -19,6 +20,8 @@ urlpatterns = [
     path('estado-cuenta/', views.EstadoCuentaView.as_view(), name='estado-cuenta'),
     path('me/', views.MeView.as_view(), name='me'),
     path('cambiar-password/', views.CambiarPasswordView.as_view(), name='cambiar-password'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
 ]
 
 # Agregamos las rutas del router

@@ -53,10 +53,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: any }>;
   registro: (userData: RegisterData) => Promise<{ success: boolean; data?: RegisterResponse; error?: any }>;
   logout: () => void;
-  refreshAccessToken: () => Promise<boolean>;
+  refreshAccessToken: () => Promise<string | null>;
   authFetch: (url: string, options?: RequestInit) => Promise<Response>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isPresidente: boolean;
   isTesorero: boolean;
   isSecretario: boolean;
   isSocio: boolean;
@@ -153,6 +154,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout
   const logout = (): void => {
+    const storedRefresh = localStorage.getItem('refreshToken');
+    if (storedRefresh) {
+      fetch(`${API_URL}/api/logout/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: storedRefresh }),
+      }).catch(() => {});
+    }
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
@@ -162,21 +171,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Refrescar token
-  const refreshAccessToken = async (): Promise<boolean> => {
-    if (!refreshToken) return false;
+  const refreshAccessToken = async (): Promise<string | null> => {
+    const storedRefresh = localStorage.getItem('refreshToken');
+    if (!storedRefresh) return null;
     try {
       const response = await fetch(`${API_URL}/api/token/refresh/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh: refreshToken }),
+        body: JSON.stringify({ refresh: storedRefresh }),
       });
       const data = await handleResponse(response);
       setAccessToken(data.access);
       localStorage.setItem('accessToken', data.access);
-      return true;
+      if (data.refresh) {
+        setRefreshToken(data.refresh);
+        localStorage.setItem('refreshToken', data.refresh);
+      }
+      return data.access;
     } catch (error) {
       logout();
-      return false;
+      return null;
     }
   };
 
@@ -192,14 +206,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const response = await fetch(url, { ...options, headers });
 
     if (response.status === 401) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        const newToken = accessToken;
+      const newToken = await refreshAccessToken();
+      if (newToken) {
         const newHeaders = new Headers(options.headers || {});
         newHeaders.set('Content-Type', 'application/json');
-        if (newToken) {
-          newHeaders.set('Authorization', `Bearer ${newToken}`);
-        }
+        newHeaders.set('Authorization', `Bearer ${newToken}`);
         return fetch(url, { ...options, headers: newHeaders });
       }
     }
@@ -217,6 +228,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     authFetch,
     isAuthenticated: !!user,
     isAdmin: user?.rol === 'ADMIN',
+    isPresidente: user?.rol === 'PRES',
     isTesorero: user?.rol === 'TES',
     isSecretario: user?.rol === 'SEC',
     isSocio: user?.rol === 'SOC',
