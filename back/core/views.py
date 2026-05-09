@@ -5,6 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Usuario, Publicacion
 from .permissions import EsTesoreroOAdmin, EsSecretarioOAdmin
+from .throttles import LoginRateThrottle
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -41,26 +42,19 @@ class CrearUsuarioView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
 
 class UsuarioDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Vista para ver, actualizar o eliminar un usuario específico por UUID.
-    Requiere autenticación.
-    """
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    lookup_field = 'uuid'  # Buscar por uuid en lugar de pk
-    #permission_classes = [permissions.IsAuthenticated]  # Solo usuarios autenticados
+    lookup_field = 'uuid'
+    permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
 
 class UsuarioListView(generics.ListAPIView):
-    """
-    Vista para listar todos los usuarios.
-    Requiere autenticación.
-    """
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
-    #permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
 
 class UsuarioLoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request):
         serializer = UsuarioLoginSerializer(data=request.data, context={'request': request})
@@ -110,11 +104,20 @@ class PublicacionViewSet(viewsets.ModelViewSet):
 class GradoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Grado.objects.all()
     serializer_class = GradoSerializer
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 class InscripcionViewSet(viewsets.ModelViewSet):
-    queryset = Inscripcion.objects.all()
     serializer_class = InscripcionSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.rol in ['TES', 'ADMIN', 'PRES']:
+            return Inscripcion.objects.all()
+        if user.rol == 'PAD':
+            return Inscripcion.objects.filter(usuario__padre=user)
+        if user.rol == 'SOC':
+            return Inscripcion.objects.filter(usuario=user)
+        return Inscripcion.objects.none()
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -128,7 +131,15 @@ class PagoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         from django.db.models import Q
-        queryset = Pago.objects.all()
+        user = self.request.user
+        if user.rol in ['TES', 'ADMIN', 'PRES']:
+            queryset = Pago.objects.all()
+        elif user.rol == 'PAD':
+            queryset = Pago.objects.filter(inscripcion__usuario__padre=user)
+        elif user.rol == 'SOC':
+            queryset = Pago.objects.filter(inscripcion__usuario=user)
+        else:
+            return Pago.objects.none()
         mes = self.request.query_params.get('mes')
         anio = self.request.query_params.get('anio')
         tipo = self.request.query_params.get('tipo')
