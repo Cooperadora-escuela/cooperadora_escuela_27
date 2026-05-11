@@ -173,8 +173,10 @@ class Publicacion(models.Model):
         ('novedad', 'Novedad'),
     ]
     titulo = models.CharField(max_length=200)
+    encabezado = models.CharField(max_length=300, blank=True, null=True)
     contenido = models.TextField()
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, default='noticia')
+    imagen_portada = models.ImageField(upload_to='publicaciones/portadas/', blank=True, null=True)
     fecha = models.DateTimeField(auto_now_add=True)
     autor = models.ForeignKey(
         Usuario,
@@ -190,6 +192,20 @@ class Publicacion(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+class PublicacionImagen(models.Model):
+    publicacion = models.ForeignKey(Publicacion, on_delete=models.CASCADE, related_name='imagenes')
+    imagen = models.ImageField(upload_to='publicaciones/galeria/')
+    orden = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['orden']
+        verbose_name = "Imagen de publicación"
+        verbose_name_plural = "Imágenes de publicaciones"
+
+    def __str__(self):
+        return f"Imagen de {self.publicacion.titulo}"
 
 class CuotaMensual(models.Model):
     """Define el monto de la cuota para un mes y año específicos (global para todos los grados)."""
@@ -271,8 +287,8 @@ class Pago(models.Model):
         # Validaciones específicas
         if self.tipo == 'mensual' and self.mes is None:
             raise ValidationError({'mes': 'El mes es obligatorio para pagos mensuales.'})
-        if self.tipo != 'mensual' and self.mes is not None:
-            raise ValidationError({'mes': 'El mes solo debe indicarse para pagos mensuales.'})
+        if self.tipo == 'anual' and self.mes is not None:
+            raise ValidationError({'mes': 'El mes no debe indicarse para pagos anuales.'})
         # El año del pago debe coincidir con el año de la inscripción
         if self.anio != self.inscripcion.anio:
             raise ValidationError({'anio': f'El año del pago debe ser {self.inscripcion.anio} (año de la inscripción).'})

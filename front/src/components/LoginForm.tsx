@@ -11,7 +11,6 @@ const LoginForm: React.FC = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [showRecuperar, setShowRecuperar] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -101,20 +100,6 @@ const LoginForm: React.FC = () => {
                     >
                         {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
                     </button>
-                    <div className="text-center mt-4">
-                        <button
-                            type="button"
-                            onClick={() => setShowRecuperar(prev => !prev)}
-                            className="text-cyan-500 hover:text-cyan-700 text-sm"
-                        >
-                            ¿Olvidaste tu contraseña?
-                        </button>
-                        {showRecuperar && (
-                            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 bg-cyan-50 dark:bg-gray-700 rounded-md px-4 py-3">
-                                Contactá al administrador para restablecer tu contraseña.
-                            </p>
-                        )}
-                    </div>
                 </form>
             </div>
         </div>

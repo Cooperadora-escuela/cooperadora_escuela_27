@@ -1,10 +1,11 @@
 from rest_framework import generics, permissions
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from .models import Usuario, Publicacion
+from .models import Usuario, Publicacion, PublicacionImagen
 from .permissions import EsTesoreroOAdmin, EsSecretarioOAdmin
 from .throttles import LoginRateThrottle
 from rest_framework import viewsets, status
@@ -95,11 +96,25 @@ class EstadoCuentaView(APIView):
 class PublicacionViewSet(viewsets.ModelViewSet):
     queryset = Publicacion.objects.all()
     serializer_class = PublicacionSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated(), EsSecretarioOAdmin()]
         return [IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        publicacion = serializer.save()
+        for img in self.request.FILES.getlist('imagenes'):
+            PublicacionImagen.objects.create(publicacion=publicacion, imagen=img)
+
+    def perform_update(self, serializer):
+        publicacion = serializer.save()
+        for img in self.request.FILES.getlist('imagenes'):
+            PublicacionImagen.objects.create(publicacion=publicacion, imagen=img)
+        ids_eliminar = self.request.data.getlist('eliminar_imagenes')
+        if ids_eliminar:
+            PublicacionImagen.objects.filter(id__in=ids_eliminar, publicacion=publicacion).delete()
 
 
 class GradoViewSet(viewsets.ReadOnlyModelViewSet):
@@ -196,7 +211,7 @@ class PagoViewSet(viewsets.ModelViewSet):
                     Pago.objects.create(
                         inscripcion=inscripcion,
                         tipo='donacion',
-                        mes=None,
+                        mes=mes,
                         anio=anio,
                         monto=excedente,
                         observaciones=f"Excedente pago {cuota.get_mes_display()} {anio}"
@@ -206,7 +221,7 @@ class PagoViewSet(viewsets.ModelViewSet):
                 Pago.objects.create(
                     inscripcion=inscripcion,
                     tipo='donacion',
-                    mes=None,
+                    mes=mes,
                     anio=anio,
                     monto=monto_total,
                     observaciones=f"Pago insuficiente para cuota {cuota.get_mes_display()} {anio} (cuota: ${cuota.monto})"
