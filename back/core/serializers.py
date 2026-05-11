@@ -308,12 +308,15 @@ class PublicacionImagenSerializer(serializers.ModelSerializer):
 
 class PublicacionSerializer(serializers.ModelSerializer):
     autor_nombre = serializers.SerializerMethodField()
-    imagenes = PublicacionImagenSerializer(many=True, read_only=True)
+    imagenes = serializers.SerializerMethodField()
 
     class Meta:
         model = Publicacion
         fields = ['id', 'titulo', 'encabezado', 'contenido', 'tipo', 'imagen_portada', 'fecha', 'autor', 'autor_nombre', 'imagenes']
         read_only_fields = ['fecha', 'autor']
+
+    def get_imagenes(self, obj):
+        return PublicacionImagenSerializer(obj.imagenes.all(), many=True, context=self.context).data
 
     def get_autor_nombre(self, obj):
         if obj.autor:
