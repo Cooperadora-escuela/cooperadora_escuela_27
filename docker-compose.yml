@@ -46,6 +46,8 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DEBUG=1
+    volumes:
+      - media_data:/app/media
     depends_on:
       - postgres
     networks:
@@ -63,3 +65,4 @@ services:
 
 volumes:
   postgres_data:
+  media_data:

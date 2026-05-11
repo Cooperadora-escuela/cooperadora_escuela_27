@@ -197,8 +197,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Fetch autenticado
   const authFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const token = accessToken || localStorage.getItem('accessToken');
+    const isFormData = options.body instanceof FormData;
     const headers = new Headers(options.headers || {});
-    headers.set('Content-Type', 'application/json');
+    if (!isFormData) headers.set('Content-Type', 'application/json');
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -209,7 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const newToken = await refreshAccessToken();
       if (newToken) {
         const newHeaders = new Headers(options.headers || {});
-        newHeaders.set('Content-Type', 'application/json');
+        if (!isFormData) newHeaders.set('Content-Type', 'application/json');
         newHeaders.set('Authorization', `Bearer ${newToken}`);
         return fetch(url, { ...options, headers: newHeaders });
       }

@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, MESES_CICLO  # noqa: F401
+from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, PublicacionImagen, MESES_CICLO  # noqa: F401
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -300,12 +300,19 @@ class CuotaMensualSerializer(serializers.ModelSerializer):
         return obj.get_mes_display()
 
 
+class PublicacionImagenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PublicacionImagen
+        fields = ['id', 'imagen', 'orden']
+
+
 class PublicacionSerializer(serializers.ModelSerializer):
     autor_nombre = serializers.SerializerMethodField()
+    imagenes = PublicacionImagenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Publicacion
-        fields = ['id', 'titulo', 'contenido', 'tipo', 'fecha', 'autor', 'autor_nombre']
+        fields = ['id', 'titulo', 'encabezado', 'contenido', 'tipo', 'imagen_portada', 'fecha', 'autor', 'autor_nombre', 'imagenes']
         read_only_fields = ['fecha', 'autor']
 
     def get_autor_nombre(self, obj):
