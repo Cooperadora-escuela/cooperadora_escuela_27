@@ -15,7 +15,9 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-load_dotenv()
+# Carga .env.docker si existe (desarrollo local con Docker), sino usa .env
+_env_file = Path(__file__).resolve().parent.parent / '.env.docker'
+load_dotenv(_env_file if _env_file.exists() else None)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

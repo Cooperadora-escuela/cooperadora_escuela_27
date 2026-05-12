@@ -46,6 +46,10 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DEBUG=1
+      - BACKEND_WALLET_PRIVATE_KEY=0xd6b974f4949b5b1bbf5fdf309674dd04ca9b0ebc3c5a6b6288fc2d3fb332b138
+      - WALLET_ENCRYPTION_KEY=JkHIPDYzBFOgGY7l3WN4VMkD-nzJixrERgN2Az7BlE8=
+      - BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+      - DAO_CONTRACT_ADDRESS=0x77c6740a2031fa0684ea88edc9c6019fa0e7bd2b
     volumes:
       - media_data:/app/media
     depends_on:

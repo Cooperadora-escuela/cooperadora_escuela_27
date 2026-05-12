@@ -12,14 +12,15 @@ def generar_wallet_padre(sender, instance, created, **kwargs):
     if instance.wallet_address:
         return
     try:
-        from core.web3_client import generar_wallet
+        from core.web3_client import generar_wallet, registrar_padre_en_dao
         address, encrypted_key = generar_wallet()
         sender.objects.filter(pk=instance.pk).update(
             wallet_address=address,
             wallet_private_key_encrypted=encrypted_key,
         )
+        registrar_padre_en_dao(address)
     except Exception:
-        logger.exception("generar_wallet falló para usuario id=%s", instance.pk)
+        logger.exception("generar_wallet/registrar_padre falló para usuario id=%s", instance.pk)
 
 
 @receiver(post_save, sender='core.Pago')

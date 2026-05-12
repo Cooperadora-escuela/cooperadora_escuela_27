@@ -107,7 +107,7 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
         user = super().create(validated_data)
         if password:
             user.set_password(password)
-            user.save()
+            user.save(update_fields=['password'])
 
         if grado and anio:
             Inscripcion.objects.create(
