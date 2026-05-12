@@ -71,6 +71,8 @@ class Usuario(AbstractUser):
         related_name='hijos',
         limit_choices_to={'rol': Rol.PADRE}
     )
+    wallet_address = models.CharField(max_length=42, null=True, blank=True)
+    wallet_private_key_encrypted = models.TextField(null=True, blank=True)
 
     # Configuración
     USERNAME_FIELD = 'email'
@@ -256,6 +258,8 @@ class Pago(models.Model):
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_pago = models.DateTimeField(auto_now_add=True)
     observaciones = models.TextField(blank=True)
+    token_minteado = models.BooleanField(default=False)
+    token_mint_tx = models.CharField(max_length=66, null=True, blank=True)
 
     class Meta:
         constraints = [
