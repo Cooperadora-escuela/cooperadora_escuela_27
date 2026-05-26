@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from .models import Cooperadora
 
 
-EXEMPT_PREFIXES = ('/admin/',)
+EXEMPT_PREFIXES = ('/admin/', '/api/register/')
 
 
 class TenantMiddleware:

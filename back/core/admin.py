@@ -2,6 +2,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings as django_settings
 from datetime import timedelta
 from .models import Usuario, Grado, Inscripcion, CuotaMensual, ConfiguracionAnual, Pago, Cooperadora, SubscriptionStatus
 
@@ -16,7 +18,7 @@ class CooperadoraAdmin(admin.ModelAdmin):
         ('Suscripción', {'fields': ('subscription_status', 'trial_until', 'subscription_expiry')}),
         ('Info', {'fields': ('creada_en',)}),
     )
-    actions = ['habilitar_trial_30_dias', 'activar_anualidad', 'suspender', 'marcar_pendiente']
+    actions = ['habilitar_trial_30_dias', 'activar_anualidad', 'suspender', 'marcar_pendiente', 'enviar_bienvenida']
 
     @admin.display(boolean=True, description='Acceso activo')
     def acceso_activo(self, obj):
@@ -50,6 +52,24 @@ class CooperadoraAdmin(admin.ModelAdmin):
     @admin.action(description='Marcar como pendiente')
     def marcar_pendiente(self, request, queryset):
         queryset.update(subscription_status=SubscriptionStatus.PENDING)
+
+    @admin.action(description='Enviar email de bienvenida al contacto')
+    def enviar_bienvenida(self, request, queryset):
+        for cooperadora in queryset:
+            if not cooperadora.email_contacto:
+                continue
+            send_mail(
+                subject='¡Bienvenida a CooperaApp!',
+                message=(
+                    f'Hola {cooperadora.nombre_contacto},\n\n'
+                    f'Tu cooperadora "{cooperadora.nombre}" ya tiene acceso a CooperaApp.\n\n'
+                    f'Podés ingresar en: cooperadoras.org/{cooperadora.slug}\n\n'
+                    f'Saludos,\nEl equipo de CooperaApp'
+                ),
+                from_email=django_settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[cooperadora.email_contacto],
+                fail_silently=True,
+            )
 
 
 @admin.register(Usuario)

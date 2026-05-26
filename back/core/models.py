@@ -27,6 +27,8 @@ class Cooperadora(models.Model):
     )
     trial_until         = models.DateField(null=True, blank=True)
     subscription_expiry = models.DateField(null=True, blank=True)
+    email_contacto      = models.EmailField(blank=True)
+    nombre_contacto     = models.CharField(max_length=100, blank=True)
     creada_en           = models.DateTimeField(auto_now_add=True)
 
     class Meta:

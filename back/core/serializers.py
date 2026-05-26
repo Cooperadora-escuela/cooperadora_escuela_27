@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, PublicacionImagen, MESES_CICLO  # noqa: F401
+from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, PublicacionImagen, MESES_CICLO, Cooperadora  # noqa: F401
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -138,6 +138,21 @@ class UsuarioLoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+
+
+class RegistroCooperadoraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cooperadora
+        fields = ('numero_escuela', 'nombre', 'nombre_contacto', 'email_contacto')
+
+    def validate_numero_escuela(self, value):
+        if Cooperadora.objects.filter(numero_escuela=value).exists():
+            raise serializers.ValidationError('Ya existe una cooperadora registrada con ese número de escuela.')
+        return value
+
+    def create(self, validated_data):
+        validated_data['slug'] = f"escuela{validated_data['numero_escuela']}"
+        return super().create(validated_data)
 
 
 

@@ -1,4 +1,6 @@
 from rest_framework import generics, permissions
+from django.core.mail import send_mail
+from django.conf import settings as django_settings
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -30,6 +32,7 @@ from .serializers import (
     PublicacionSerializer,
     EstadoCuentaHijoSerializer,
     CuotaMensualSerializer,
+    RegistroCooperadoraSerializer,
 )
 
 
@@ -392,3 +395,38 @@ class CuotaMensualViewSet(TenantQuerysetMixin, viewsets.ModelViewSet):
         if anio:
             queryset = queryset.filter(anio=anio)
         return queryset
+
+
+class RegistroCooperadoraView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RegistroCooperadoraSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cooperadora = serializer.save()
+
+        self._notificar_admin(cooperadora)
+
+        return Response(
+            {'detail': 'Solicitud recibida. Te contactaremos cuando tu acceso esté habilitado.'},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def _notificar_admin(self, cooperadora):
+        try:
+            send_mail(
+                subject=f'[CooperaApp] Nueva solicitud: Escuela N°{cooperadora.numero_escuela}',
+                message=(
+                    f'Nueva cooperadora registrada.\n\n'
+                    f'Escuela: {cooperadora.nombre}\n'
+                    f'Número: {cooperadora.numero_escuela}\n'
+                    f'Contacto: {cooperadora.nombre_contacto}\n'
+                    f'Email: {cooperadora.email_contacto}\n\n'
+                    f'Aprobá el acceso desde el panel: /admin/core/cooperadora/{cooperadora.pk}/change/'
+                ),
+                from_email=django_settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[django_settings.PLATFORM_ADMIN_EMAIL],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
