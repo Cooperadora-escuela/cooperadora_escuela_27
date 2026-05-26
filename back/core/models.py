@@ -4,6 +4,47 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 import uuid
+from datetime import date
+
+
+class SubscriptionStatus(models.TextChoices):
+    PENDING   = 'PENDING',   'Pendiente'
+    TRIAL     = 'TRIAL',     'Período de prueba'
+    ACTIVE    = 'ACTIVE',    'Activa'
+    EXPIRED   = 'EXPIRED',   'Vencida'
+    SUSPENDED = 'SUSPENDED', 'Suspendida'
+
+
+class Cooperadora(models.Model):
+    numero_escuela      = models.PositiveIntegerField(unique=True)
+    nombre              = models.CharField(max_length=200)
+    slug                = models.SlugField(unique=True)
+    dao_address         = models.CharField(max_length=42, blank=True)
+    subscription_status = models.CharField(
+        max_length=10,
+        choices=SubscriptionStatus.choices,
+        default=SubscriptionStatus.PENDING
+    )
+    trial_until         = models.DateField(null=True, blank=True)
+    subscription_expiry = models.DateField(null=True, blank=True)
+    creada_en           = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'cooperadoras'
+        verbose_name = 'Cooperadora'
+        verbose_name_plural = 'Cooperadoras'
+
+    def __str__(self):
+        return f"Escuela N°{self.numero_escuela} — {self.nombre}"
+
+    @property
+    def tiene_acceso(self):
+        if self.subscription_status == SubscriptionStatus.TRIAL:
+            return bool(self.trial_until and self.trial_until >= date.today())
+        if self.subscription_status == SubscriptionStatus.ACTIVE:
+            return bool(self.subscription_expiry and self.subscription_expiry >= date.today())
+        return False
+
 
 class Rol(models.TextChoices):
     ADMIN = 'ADMIN', 'Administrador'
@@ -44,7 +85,14 @@ class Usuario(AbstractUser):
     Extiende el User model de Django
     """
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    dni = models.CharField(max_length=20, unique=True)
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name='usuarios'
+    )
+    dni = models.CharField(max_length=20)
     rol = models.CharField(
         max_length=5,
         choices=Rol.choices,
@@ -53,12 +101,12 @@ class Usuario(AbstractUser):
     telefono = models.CharField(max_length=20, blank=True)
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
-    
+
     # Deshabilitamos campos que no usamos
     first_name = None
     last_name = None
     username = None
-    
+
     # Campos personalizados
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
@@ -77,14 +125,17 @@ class Usuario(AbstractUser):
     # Configuración
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['dni', 'nombre', 'apellido']
-    
+
     # Manager personalizado
     objects = UsuarioManager()
-    
+
     class Meta:
         db_table = 'usuarios'
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
+        constraints = [
+            models.UniqueConstraint(fields=['cooperadora', 'dni'], name='unique_usuario_dni_por_cooperadora'),
+        ]
     
     def __str__(self):
         return f"{self.nombre} {self.apellido} - {self.dni}"
@@ -111,6 +162,12 @@ MESES_CICLO = [
 
 class Grado(models.Model):
     """Tabla de grados escolares: 1° a 7°, con división A, B, C opcional."""
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='grados'
+    )
     numero = models.PositiveSmallIntegerField(choices=[(i, f'{i}°') for i in range(1, 8)])
     letra = models.CharField(
         max_length=1,
@@ -120,7 +177,7 @@ class Grado(models.Model):
     )
 
     class Meta:
-        unique_together = ('numero', 'letra')
+        unique_together = ('cooperadora', 'numero', 'letra')
         ordering = ['numero', 'letra']
         verbose_name = "Grado"
         verbose_name_plural = "Grados"
@@ -136,6 +193,12 @@ class Inscripcion(models.Model):
         ('mensual', 'Mensual'),
         ('anual', 'Anual'),
     ]
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='inscripciones'
+    )
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='inscripciones')
     grado = models.ForeignKey(Grado, on_delete=models.PROTECT, related_name='inscripciones')
     anio = models.PositiveIntegerField()
@@ -174,6 +237,12 @@ class Publicacion(models.Model):
         ('agenda', 'Agenda'),
         ('novedad', 'Novedad'),
     ]
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='publicaciones'
+    )
     titulo = models.CharField(max_length=200)
     encabezado = models.CharField(max_length=300, blank=True, null=True)
     contenido = models.TextField()
@@ -211,13 +280,19 @@ class PublicacionImagen(models.Model):
 
 class CuotaMensual(models.Model):
     """Define el monto de la cuota para un mes y año específicos (global para todos los grados)."""
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='cuotas_mensuales'
+    )
     anio = models.PositiveIntegerField()
     mes = models.PositiveSmallIntegerField(choices=MESES_CICLO)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     activa = models.BooleanField(default=True, help_text="Permite deshabilitar una cuota sin eliminarla")
 
     class Meta:
-        unique_together = ('anio', 'mes')
+        unique_together = ('cooperadora', 'anio', 'mes')
         ordering = ['anio', 'mes']
         verbose_name = "Cuota mensual"
         verbose_name_plural = "Cuotas mensuales"
@@ -227,11 +302,18 @@ class CuotaMensual(models.Model):
 
 class ConfiguracionAnual(models.Model):
     """Monto fijo del pago anual por año."""
-    anio = models.PositiveIntegerField(unique=True)
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='configuraciones_anuales'
+    )
+    anio = models.PositiveIntegerField()
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     activa = models.BooleanField(default=True)
 
     class Meta:
+        unique_together = ('cooperadora', 'anio')
         ordering = ['-anio']
         verbose_name = "Configuración anual"
         verbose_name_plural = "Configuraciones anuales"
@@ -246,6 +328,12 @@ class Pago(models.Model):
         ('anual', 'Pago anual'),
         ('donacion', 'Donación'),
     ]
+    cooperadora = models.ForeignKey(
+        Cooperadora,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='pagos'
+    )
     inscripcion = models.ForeignKey(Inscripcion, on_delete=models.CASCADE, related_name='pagos')
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     mes = models.PositiveSmallIntegerField(

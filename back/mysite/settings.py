@@ -15,9 +15,13 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Carga .env.docker si existe (desarrollo local con Docker), sino usa .env
-_env_file = Path(__file__).resolve().parent.parent / '.env.docker'
-load_dotenv(_env_file if _env_file.exists() else None)
+# Carga .env.saas > .env.docker > .env (en ese orden de prioridad)
+_base = Path(__file__).resolve().parent.parent
+for _name in ('.env.saas', '.env.docker', '.env'):
+    _env_file = _base / _name
+    if _env_file.exists():
+        load_dotenv(_env_file)
+        break
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
