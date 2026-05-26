@@ -77,6 +77,8 @@ coverage.xml
 .env.local
 .env.production
 .env.development
+.env.docker
+.env.saas
 
 # Docker
 *.pid
