@@ -29,6 +29,7 @@ class Cooperadora(models.Model):
     subscription_expiry = models.DateField(null=True, blank=True)
     email_contacto      = models.EmailField(blank=True)
     nombre_contacto     = models.CharField(max_length=100, blank=True)
+    activation_token    = models.UUIDField(null=True, blank=True)
     creada_en           = models.DateTimeField(auto_now_add=True)
 
     class Meta:

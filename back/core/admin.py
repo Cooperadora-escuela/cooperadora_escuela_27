@@ -1,4 +1,5 @@
 # core/admin.py
+import uuid
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils import timezone
@@ -12,7 +13,7 @@ class CooperadoraAdmin(admin.ModelAdmin):
     list_display = ('numero_escuela', 'nombre', 'slug', 'subscription_status', 'trial_until', 'subscription_expiry', 'acceso_activo', 'creada_en')
     list_filter = ('subscription_status',)
     search_fields = ('nombre', 'numero_escuela', 'slug')
-    readonly_fields = ('slug', 'creada_en')
+    readonly_fields = ('slug', 'activation_token', 'creada_en')
     fieldsets = (
         (None, {'fields': ('numero_escuela', 'nombre', 'slug', 'dao_address')}),
         ('Suscripción', {'fields': ('subscription_status', 'trial_until', 'subscription_expiry')}),
@@ -32,10 +33,33 @@ class CooperadoraAdmin(admin.ModelAdmin):
     @admin.action(description='Habilitar trial de 30 días')
     def habilitar_trial_30_dias(self, request, queryset):
         hoy = timezone.now().date()
-        queryset.update(
-            subscription_status=SubscriptionStatus.TRIAL,
-            trial_until=hoy + timedelta(days=30),
-        )
+        for cooperadora in queryset:
+            token = uuid.uuid4()
+            cooperadora.subscription_status = SubscriptionStatus.TRIAL
+            cooperadora.trial_until = hoy + timedelta(days=30)
+            cooperadora.activation_token = token
+            cooperadora.save(update_fields=['subscription_status', 'trial_until', 'activation_token'])
+
+            if cooperadora.email_contacto:
+                link = (
+                    f'{django_settings.FRONTEND_URL}/{cooperadora.slug}/activar'
+                    f'?token={token}'
+                )
+                send_mail(
+                    subject='[CooperaApp] Activá tu cuenta',
+                    message=(
+                        f'Hola {cooperadora.nombre_contacto},\n\n'
+                        f'Tu cooperadora "{cooperadora.nombre}" fue aprobada. '
+                        f'Tenés 30 días de prueba gratuita.\n\n'
+                        f'Para crear tu usuario administrador hacé clic en el siguiente enlace:\n\n'
+                        f'{link}\n\n'
+                        f'El enlace es de un solo uso.\n\n'
+                        f'Saludos,\nEl equipo de CooperaApp'
+                    ),
+                    from_email=django_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[cooperadora.email_contacto],
+                    fail_silently=True,
+                )
 
     @admin.action(description='Activar suscripción anual (1 año desde hoy)')
     def activar_anualidad(self, request, queryset):

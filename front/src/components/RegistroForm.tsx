@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contex/UserContex';
+import { useTenant } from '../contex/TenantContext';
 import { API_URL } from '../config';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -30,6 +31,7 @@ interface ApiErrors {
 
 const RegistroForm: React.FC = () => {
   const { registro, isTesorero, isAdmin, authFetch } = useAuth();
+  const { slug } = useTenant();
   const navigate = useNavigate();
 
   const [tipo, setTipo] = useState<TipoUsuario>('PAD');
@@ -52,7 +54,7 @@ const RegistroForm: React.FC = () => {
   const [grados, setGrados] = useState<Grado[]>([]);
 
   if (!isTesorero && !isAdmin) {
-    navigate('/');
+    navigate(`/${slug}/login`);
     return null;
   }
 
@@ -112,7 +114,7 @@ const RegistroForm: React.FC = () => {
       if (result.success) {
         const labels: Record<TipoUsuario, string> = { PAD: 'Padre/Tutor', SOC: 'Alumno', MIE: 'Miembro' };
         toast.success(`${labels[tipo]} creado correctamente.`);
-        navigate('/about');
+        navigate(`/${slug}/about`);
       } else {
         if (result.error) {
           setApiErrors(result.error);

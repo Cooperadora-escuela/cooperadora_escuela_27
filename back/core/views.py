@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from .models import Usuario, Publicacion, PublicacionImagen
+from .models import Usuario, Publicacion, PublicacionImagen, Cooperadora
+from django.shortcuts import get_object_or_404
 from .permissions import EsTesoreroOAdmin, EsSecretarioOAdmin
 from .throttles import LoginRateThrottle
 from rest_framework import viewsets, status
@@ -430,3 +431,77 @@ class RegistroCooperadoraView(APIView):
             )
         except Exception:
             pass
+
+
+class CooperadoraInfoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, slug):
+        c = get_object_or_404(Cooperadora, slug=slug)
+        return Response({'nombre': c.nombre, 'numero_escuela': c.numero_escuela})
+
+
+class ActivarCooperadoraView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        try:
+            c = Cooperadora.objects.get(activation_token=token)
+        except Cooperadora.DoesNotExist:
+            return Response({'detail': 'Token inválido o ya utilizado.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            'nombre': c.nombre,
+            'email_contacto': c.email_contacto,
+            'slug': c.slug,
+        })
+
+    def post(self, request, token):
+        try:
+            c = Cooperadora.objects.get(activation_token=token)
+        except Cooperadora.DoesNotExist:
+            return Response({'detail': 'Token inválido o ya utilizado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        nombre = request.data.get('nombre', '').strip()
+        apellido = request.data.get('apellido', '').strip()
+        dni = request.data.get('dni', '').strip()
+        password = request.data.get('password', '')
+
+        errors = {}
+        if not nombre:
+            errors['nombre'] = ['Este campo es requerido.']
+        if not apellido:
+            errors['apellido'] = ['Este campo es requerido.']
+        if not dni:
+            errors['dni'] = ['Este campo es requerido.']
+        if not password:
+            errors['password'] = ['Este campo es requerido.']
+
+        if errors:
+            return Response(errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            return Response({'password': list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Usuario.objects.filter(email=c.email_contacto).exists():
+            return Response(
+                {'detail': 'Ya existe un usuario con ese email. Iniciá sesión directamente.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            Usuario.objects.create_user(
+                email=c.email_contacto,
+                password=password,
+                nombre=nombre,
+                apellido=apellido,
+                dni=dni,
+                rol='ADMIN',
+                cooperadora=c,
+                activo=True,
+            )
+            c.activation_token = None
+            c.save(update_fields=['activation_token'])
+
+        return Response({'detail': 'Usuario creado correctamente. Ya podés iniciar sesión.'})

@@ -68,10 +68,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-AUTHENTICATION_BACKENDS = [
-    'core.backends.TenantAuthBackend',
-]
-
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -111,6 +107,19 @@ CORS_ALLOWED_ORIGINS = [
 ] + [o for o in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if o]
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-tenant-slug',
+]
 
 
 ROOT_URLCONF = 'mysite.urls'
@@ -185,7 +194,8 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@cooperadoras.org')
-PLATFORM_ADMIN_EMAIL = os.getenv('PLATFORM_ADMIN_EMAIL', '531xtsulyts@gmail.com')
+PLATFORM_ADMIN_EMAIL = os.getenv('PLATFORM_ADMIN_EMAIL', 'walter.frias.dev@gmail.com')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 
 # Internationalization

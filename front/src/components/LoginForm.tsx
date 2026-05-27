@@ -1,12 +1,14 @@
 // src/components/LoginForm.tsx
 import React, { useState } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { useTenant } from '../contex/TenantContext';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 
 const LoginForm: React.FC = () => {
     const { login } = useAuth();
+    const { slug } = useTenant();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ const LoginForm: React.FC = () => {
             const result = await login(formData.email, formData.password);
             if (result.success) {
                 toast.success('¡Login exitoso!');
-                navigate('/about'); // 👈 Redirige a /about
+                navigate(`/${slug}/about`);
             } else {
                 const errorMsg = result.error?.message || 'Credenciales inválidas. Intenta de nuevo.';
                 toast.error(errorMsg);

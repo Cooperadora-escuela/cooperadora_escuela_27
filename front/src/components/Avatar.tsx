@@ -1,11 +1,13 @@
 // src/components/Avatar.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contex/UserContex';
+import { useTenant } from '../contex/TenantContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 const Avatar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { slug } = useTenant();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const Avatar: React.FC = () => {
   const handleLogout = () => {
     logout(); // Llama a la función del contexto
     toast.success('Sesión cerrada correctamente');
-    navigate('/'); // Redirige a la raíz
+    navigate(`/${slug}/login`);
     setIsOpen(false);
   };
 
@@ -55,7 +57,7 @@ const Avatar: React.FC = () => {
             <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
           </div>
           <Link
-            to="/perfil"
+            to={`/${slug}/perfil`}
             className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => setIsOpen(false)}
           >

@@ -15,6 +15,8 @@ import PerfilPage from './pages/PerfilPage';
 import CuotasPage from './pages/CuotasPage';
 import SuscripcionBloqueadaPage from './pages/SuscripcionBloqueadaPage';
 import RegistroCooperadoraPage from './pages/RegistroCooperadoraPage';
+import RegistroFormPages from './pages/RegistroFormPages';
+import ActivarCooperadoraPage from './pages/ActivarCooperadoraPage';
 
 function App() {
   return (
@@ -38,6 +40,8 @@ function App() {
             <Route path="/:slug/usuarios" element={<UsuariosPage />} />
             <Route path="/:slug/perfil" element={<PerfilPage />} />
             <Route path="/:slug/cuotas" element={<CuotasPage />} />
+            <Route path="/:slug/registro" element={<RegistroFormPages />} />
+            <Route path="/:slug/activar" element={<ActivarCooperadoraPage />} />
             <Route path="/:slug/suscripcion-bloqueada" element={<SuscripcionBloqueadaPage />} />
           </Routes>
         </AuthProvider>
