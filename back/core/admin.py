@@ -13,7 +13,7 @@ class CooperadoraAdmin(admin.ModelAdmin):
     list_display = ('numero_escuela', 'nombre', 'slug', 'subscription_status', 'trial_until', 'subscription_expiry', 'acceso_activo', 'creada_en')
     list_filter = ('subscription_status',)
     search_fields = ('nombre', 'numero_escuela', 'slug')
-    readonly_fields = ('slug', 'activation_token', 'creada_en')
+    readonly_fields = ('slug', 'dao_address', 'activation_token', 'creada_en')
     fieldsets = (
         (None, {'fields': ('numero_escuela', 'nombre', 'slug', 'dao_address')}),
         ('Suscripción', {'fields': ('subscription_status', 'trial_until', 'subscription_expiry')}),

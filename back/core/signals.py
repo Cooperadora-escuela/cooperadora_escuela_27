@@ -1,8 +1,55 @@
 import logging
-from django.db.models.signals import post_save
+from datetime import date
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(pre_save, sender='core.Cooperadora')
+def _track_cooperadora_status(sender, instance, **kwargs):
+    """Guarda el status anterior para que post_save pueda detectar la transición."""
+    if not instance.pk:
+        instance._prev_status = None
+        return
+    try:
+        prev = sender.objects.get(pk=instance.pk)
+        instance._prev_status = prev.subscription_status
+    except sender.DoesNotExist:
+        instance._prev_status = None
+
+
+@receiver(post_save, sender='core.Cooperadora')
+def provisionar_dao_clone(sender, instance, created, **kwargs):
+    """
+    Al activar una cooperadora (PENDING → TRIAL/ACTIVE) deploya un DAO clone via Factory
+    y guarda el dao_address resultante. Solo actúa si dao_address todavía está vacío.
+    """
+    STATUS_CON_ACCESO = ('TRIAL', 'ACTIVE')
+    prev = getattr(instance, '_prev_status', None)
+
+    activando = (
+        instance.subscription_status in STATUS_CON_ACCESO
+        and prev not in STATUS_CON_ACCESO
+        and not instance.dao_address
+    )
+    if not activando:
+        return
+
+    try:
+        from core.web3_client import deploy_dao_clone
+        ciclo_actual = date.today().year
+        dao_address = deploy_dao_clone(instance.nombre, ciclo_actual)
+        sender.objects.filter(pk=instance.pk).update(dao_address=dao_address)
+        logger.info(
+            "DAO clone deployado para cooperadora id=%s: %s",
+            instance.pk, dao_address,
+        )
+    except Exception:
+        logger.exception(
+            "deploy_dao_clone falló para cooperadora id=%s — dao_address queda vacío",
+            instance.pk,
+        )
 
 
 @receiver(post_save, sender='core.Usuario')
