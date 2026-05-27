@@ -1,12 +1,12 @@
 # back/core/serializers.py
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, PublicacionImagen, MESES_CICLO, Cooperadora  # noqa: F401
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 
 class UsuarioSerializer(serializers.ModelSerializer):
     padre_email = serializers.SerializerMethodField()
@@ -76,8 +76,13 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
         if rol == 'SOC':
             dni_padre = data.get('dni_padre')
             if dni_padre:
+                # Filtramos por cooperadora para no cruzar datos entre tenants
+                cooperadora = self.context.get('cooperadora')
+                qs = Usuario.objects.filter(dni=dni_padre, rol='PAD')
+                if cooperadora:
+                    qs = qs.filter(cooperadora=cooperadora)
                 try:
-                    data['padre'] = Usuario.objects.get(dni=dni_padre, rol='PAD')
+                    data['padre'] = qs.get()
                 except Usuario.DoesNotExist:
                     raise serializers.ValidationError(
                         {'dni_padre': f'No existe un padre/tutor con el DNI "{dni_padre}".'}
@@ -105,19 +110,20 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
         anio = validated_data.pop('anio', None)
         modalidad = validated_data.pop('modalidad', 'mensual')
 
-        user = super().create(validated_data)
-        if password:
-            user.set_password(password)
-            user.save(update_fields=['password'])
+        with transaction.atomic():
+            user = super().create(validated_data)
+            if password:
+                user.set_password(password)
+                user.save(update_fields=['password'])
 
-        if grado and anio:
-            Inscripcion.objects.create(
-                usuario=user,
-                grado=grado,
-                cooperadora=user.cooperadora,
-                anio=anio,
-                modalidad=modalidad,
-            )
+            if grado and anio:
+                Inscripcion.objects.create(
+                    usuario=user,
+                    grado=grado,
+                    cooperadora=user.cooperadora,
+                    anio=anio,
+                    modalidad=modalidad,
+                )
 
         return user
     

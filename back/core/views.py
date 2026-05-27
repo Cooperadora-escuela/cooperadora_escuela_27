@@ -58,6 +58,11 @@ class CrearUsuarioView(TenantQuerysetMixin, generics.CreateAPIView):
     serializer_class = UsuarioCreateSerializer
     permission_classes = [IsAuthenticated, EsTesoreroOAdmin]
 
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx['cooperadora'] = self.request.cooperadora
+        return ctx
+
 class UsuarioDetailView(TenantQuerysetMixin, generics.RetrieveUpdateDestroyAPIView):
     queryset = Usuario.objects.all()
     serializer_class = UsuarioSerializer
