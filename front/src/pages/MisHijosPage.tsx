@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contex/UserContex';
+import { useTenant } from '../contex/TenantContext';
 import { API_URL } from '../config';
 
 
@@ -24,6 +25,7 @@ interface Hijo {
 
 const MisHijosPage: React.FC = () => {
   const { authFetch } = useAuth();
+  const { slug } = useTenant();
   const [hijos, setHijos] = useState<Hijo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,7 +86,7 @@ const MisHijosPage: React.FC = () => {
 
                   <div className="flex flex-col gap-2 sm:items-end">
                     <Link
-                      to="/estado-cuenta"
+                      to={`/${slug}/estado-cuenta`}
                       className="text-sm font-medium text-cyan-500 hover:text-cyan-700 transition-colors"
                     >
                       Ver estado de cuenta →
