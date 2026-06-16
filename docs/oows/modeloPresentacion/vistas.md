@@ -1,13 +1,79 @@
 # Modelo de Presentación — Vistas
-**Sistema:** Gestión de Cooperadora Escolar N°27
+**Sistema:** CooperaApp — Gestión de Cooperadoras Escolares (SaaS Multi-tenant)
 
 ---
 
-## V01 — Login
+## V00 — Landing pública
+
+```
+┌─────────────────────────────────────────────────┐
+│          CooperaApp                [Ingresar]   │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│   Gestión digital para cooperadoras escolares   │
+│                                                 │
+│  ┌──────────────────┐  ┌──────────────────┐     │
+│  │   Para Padres    │  │  Área Admin      │     │
+│  │  Ver cuotas e    │  │  Pagos, alumnos  │     │
+│  │  hijos           │  │  y publicaciones │     │
+│  │  [Ingresar]      │  │  [Acceder]       │     │
+│  └──────────────────┘  └──────────────────┘     │
+│                                                 │
+│  ¿Sos una cooperadora? [Registrate aquí]        │
+└─────────────────────────────────────────────────┘
+```
+**Acceso:** Público | **Ruta:** `/`
+
+---
+
+## V01 — Registro de cooperadora
 
 ```
 ┌─────────────────────────────────────┐
-│     Cooperadora Escolar N°27        │
+│   Registrá tu cooperadora           │
+│                                     │
+│  Número de escuela: [____________]  │
+│  Nombre:            [____________]  │
+│  Nombre contacto:   [____________]  │
+│  Email contacto:    [____________]  │
+│  Teléfono:          [____________]  │
+│                                     │
+│         [Enviar solicitud]          │
+│                                     │
+│  Tu solicitud será revisada         │
+│  en las próximas 24-48 hs.          │
+└─────────────────────────────────────┘
+```
+**Acceso:** Público | **Ruta:** `/register` | **Acción:** POST `/api/register/`
+
+---
+
+## V02 — Activación de cooperadora
+
+```
+┌─────────────────────────────────────┐
+│  Activar cuenta — {nombre coop}     │
+│                                     │
+│  Creá tu usuario administrador      │
+│                                     │
+│  Nombre:      [___________________] │
+│  Apellido:    [___________________] │
+│  DNI:         [___________________] │
+│  Contraseña:  [___________________] │
+│  Confirmar:   [___________________] │
+│                                     │
+│         [Crear cuenta]              │
+└─────────────────────────────────────┘
+```
+**Acceso:** Público con token | **Ruta:** `/{slug}/activar?token=...` | **Acción:** POST `/api/activar/{token}/`
+
+---
+
+## V03 — Login
+
+```
+┌─────────────────────────────────────┐
+│   {Nombre cooperadora} N°{numero}   │
 │                                     │
 │  Email:    [_____________________]  │
 │  Clave:    [_____________________]  │
@@ -15,255 +81,115 @@
 │            [  Ingresar  ]           │
 └─────────────────────────────────────┘
 ```
-**Acceso:** Público  
-**Acción:** POST /api/login/
+**Acceso:** Público | **Ruta:** `/{slug}/login` | **Acción:** POST `/api/login/`
 
 ---
 
-## V02 — Dashboard Tesorero/Admin
+## V04 — Dashboard Admin/Tesorero
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Cooperadora N°27          [Usuario: TES] [Salir]   │
-├─────────────┬───────────────────────────────────────┤
-│  MENÚ       │  Resumen                              │
-│             │  ┌──────────┐ ┌──────────┐            │
-│ Usuarios    │  │ Alumnos  │ │  Pagos   │            │
-│ Inscripciones│ │    42    │ │  $ 8400  │            │
-│ Pagos       │  └──────────┘ └──────────┘            │
-│ Configuración│                                      │
-└─────────────┴───────────────────────────────────────┘
-```
-**Acceso:** TES, ADMIN
-
----
-
-## V03 — Mis Hijos (Padre)
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Cooperadora N°27          [Juan García] [Salir]    │
+│  {Nombre coop} N°{num}     [Admin: Juan] [Salir]    │
 ├─────────────────────────────────────────────────────┤
+│  Hola, Juan — Panel de administración               │
+│                                                     │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+│  │  Pagos   │  │ Usuarios │  │ + Nuevo  │           │
+│  │          │  │          │  │ usuario  │           │
+│  │ [Ir]     │  │ [Ver]    │  │ [Ir]     │           │
+│  └──────────┘  └──────────┘  └──────────┘           │
+│  ┌──────────┐  ┌──────────┐                         │
+│  │  Public. │  │ Config.  │                         │
+│  │ [Gestionar]│ │ [Ir]    │                         │
+│  └──────────┘  └──────────┘                         │
+└─────────────────────────────────────────────────────┘
+```
+**Acceso:** ADMIN, TES | **Ruta:** `/{slug}/`
+
+---
+
+## V05 — Dashboard Padre (con WalletRevealBanner)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  {Nombre coop}             [Walter] [Salir]         │
+├─────────────────────────────────────────────────────┤
+│  Hola, Walter — Tu espacio en la cooperadora        │
+│                                                     │
+│  ╔═══════════════════════════════════════════╗      │
+│  ║  🪙 Tu wallet COOP está lista             ║      │
+│  ║  Cada cuota genera 1 token COOP.          ║      │
+│  ║  Te la mostramos una sola vez.            ║      │
+│  ║                   [Ver mi wallet]         ║      │
+│  ╚═══════════════════════════════════════════╝      │
+│  (banner visible solo si !key_revealed)             │
+│                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────┐  │
+│  │  Mis hijos   │  │ Estado de    │  │ Public.  │  │
+│  │              │  │ cuenta       │  │          │  │
+│  │ [Ver]        │  │ [Ver]        │  │ [Ver]    │  │
+│  └──────────────┘  └──────────────┘  └──────────┘  │
+└─────────────────────────────────────────────────────┘
+```
+**Acceso:** PAD | **Ruta:** `/{slug}/`
+
+---
+
+## V06 — Wallet Reveal (modal/banner expandido)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  ⚠️ Guardá tu clave privada ahora.                  │
+│  No la vamos a mostrar de nuevo.                    │
+├─────────────────────────────────────────────────────┤
+│  Dirección (pública)                                │
+│  0x8a5936B7D01c7A7b7f...          [Copiar]          │
+│                                                     │
+│  Clave privada — NO COMPARTIR                       │
+│  0xd6b974f4949b5b1bbf...          [Copiar]          │
+│                                                     │
+│  Para ver tu saldo en MetaMask: importá la cuenta   │
+│  con la clave privada → agregá token COOP           │
+│  en Base Sepolia: 0x0b5cca51...                     │
+└─────────────────────────────────────────────────────┘
+```
+**Acceso:** PAD (solo si `!key_revealed`) | **Datos:** GET `/api/mi-wallet/`
+
+---
+
+## V07 — Mis Hijos (PAD)
+
+```
+┌─────────────────────────────────────────────────────┐
 │  Mis hijos                                          │
 │                                                     │
 │  ┌─────────────────────────────────────────┐        │
-│  │ Pedro García — 3° A — 2026              │ [Ver]  │
+│  │ 👤 Pedro García                         │        │
+│  │ 3° A — 2026 — Mensual                   │        │
+│  │                  [Ver estado de cuenta →]│       │
 │  └─────────────────────────────────────────┘        │
 │  ┌─────────────────────────────────────────┐        │
-│  │ María García — 1° B — 2026              │ [Ver]  │
+│  │ 👤 María García                         │        │
+│  │ 1° B — 2026 — Mensual                   │        │
+│  │                  [Ver estado de cuenta →]│       │
 │  └─────────────────────────────────────────┘        │
 └─────────────────────────────────────────────────────┘
 ```
-**Acceso:** PAD  
-**Datos:** GET /api/mis-hijos/
+**Acceso:** PAD | **Ruta:** `/{slug}/mis-hijos` | **Datos:** GET `/api/mis-hijos/`
 
 ---
 
-## V04 — Vista Solo Lectura
+## V08 — Estado de Cuenta (PAD)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Cooperadora N°27          [Usuario] [Salir]        │
-├─────────────┬───────────────────────────────────────┤
-│  MENÚ       │  Contenido                            │
-│             │                                       │
-│ Inscripciones│  [Solo visualización]                │
-│ Pagos       │                                       │
-└─────────────┴───────────────────────────────────────┘
-```
-**Acceso:** PRES, SEC, REV, DOC, MIE
-
----
-
-## V05 — Listado de Usuarios
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Usuarios                          [+ Crear usuario]│
-├──────────┬──────────┬──────┬────────┬───────────────┤
-│ Nombre   │ Apellido │ DNI  │  Rol   │  Acciones     │
-├──────────┼──────────┼──────┼────────┼───────────────┤
-│ Carlos   │ López    │12345 │ SOC    │ [Editar][Baja]│
-│ Ana      │ Martínez │67890 │ PAD    │ [Editar][Baja]│
-└──────────┴──────────┴──────┴────────┴───────────────┘
-```
-**Acceso:** TES, ADMIN  
-**Datos:** GET /api/usuarios/
-
----
-
-## V06 — Crear / Editar Usuario
-
-```
-┌─────────────────────────────────────┐
-│  Crear Usuario                      │
-│                                     │
-│  Nombre:    [___________________]   │
-│  Apellido:  [___________________]   │
-│  DNI:       [___________________]   │
-│  Email:     [___________________]   │
-│  Teléfono:  [___________________]   │
-│  Rol:       [▼ Seleccionar rol  ]   │
-│                                     │
-│  (si rol=SOCIO)                     │
-│  Email padre: [_________________]   │
-│                                     │
-│       [Cancelar]  [Guardar]         │
-└─────────────────────────────────────┘
-```
-**Acceso:** TES, ADMIN  
-**Acción:** POST /api/usuarios/crear/ | PUT /api/usuarios/<uuid>/
-
----
-
-## V07 — Listado de Inscripciones
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Inscripciones                   [+ Nueva inscripción]  │
-├──────────────┬──────┬──────┬───────────┬────────────────┤
-│  Alumno      │ Grado│ Año  │ Modalidad │  Acciones      │
-├──────────────┼──────┼──────┼───────────┼────────────────┤
-│ Pedro García │ 3° A │ 2026 │ Mensual   │ [Editar][Elim] │
-│ María García │ 1° B │ 2026 │ Anual     │ [Editar][Elim] │
-└──────────────┴──────┴──────┴───────────┴────────────────┘
-```
-**Acceso:** TES/ADMIN (escritura), todos (lectura)  
-**Datos:** GET /api/inscripciones/
-
----
-
-## V08 — Crear / Editar Inscripción
-
-```
-┌─────────────────────────────────────┐
-│  Nueva Inscripción                  │
-│                                     │
-│  Alumno:    [▼ Buscar alumno    ]   │
-│  Grado:     [▼ Seleccionar grado]   │
-│  Año:       [2026               ]   │
-│  Modalidad: [▼ Mensual / Anual  ]   │
-│  Observ.:   [___________________]   │
-│                                     │
-│       [Cancelar]  [Guardar]         │
-└─────────────────────────────────────┘
-```
-
----
-
-## V09 — Listado de Pagos
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Pagos             Filtros: Mes [▼]  Año [2026]  [Buscar]    │
-│                                      [Pago simple]           │
-│                                      [Pago múltiple]         │
-│                                      [Pago anual]            │
-├───────────────┬──────────┬─────┬──────┬────────┬────────────┤
-│  Alumno       │   Tipo   │ Mes │ Año  │ Monto  │  Fecha     │
-├───────────────┼──────────┼─────┼──────┼────────┼────────────┤
-│ Pedro García  │ Mensual  │ Mar │ 2026 │ $2500  │ 01/03/2026 │
-│ María García  │ Anual    │  -  │ 2026 │ $20000 │ 05/03/2026 │
-│ Carlos López  │ Donación │  -  │ 2026 │ $500   │ 10/03/2026 │
-└───────────────┴──────────┴─────┴──────┴────────┴────────────┘
-```
-**Datos:** GET /api/pagos/?mes=3&anio=2026
-
----
-
-## V10 — Registrar Pago Simple
-
-```
-┌─────────────────────────────────────┐
-│  Pago Simple                        │
-│                                     │
-│  Alumno (DNI): [_________________]  │
-│  Mes:          [▼ Marzo          ]  │
-│  Año:          [2026             ]  │
-│  Monto:        [_________________]  │
-│                                     │
-│  Cuota del mes: $2500               │
-│                                     │
-│       [Cancelar]  [Registrar]       │
-└─────────────────────────────────────┘
-```
-**Acción:** POST /api/pagos/pago-simple/
-
----
-
-## V11 — Registrar Pago Múltiple
-
-```
-┌─────────────────────────────────────┐
-│  Pago Múltiple                      │
-│                                     │
-│  Alumno (DNI): [_________________]  │
-│  Año:          [2026             ]  │
-│  Meses:        [✓] Mar  [✓] Abr     │
-│                [ ] May  [ ] Jun     │
-│  Monto total:  [_________________]  │
-│                                     │
-│  Total cuotas: $5000                │
-│                                     │
-│       [Cancelar]  [Registrar]       │
-└─────────────────────────────────────┘
-```
-**Acción:** POST /api/pagos/pago-multiple/
-
----
-
-## V12 — Registrar Pago Anual
-
-```
-┌─────────────────────────────────────┐
-│  Pago Anual                         │
-│                                     │
-│  Alumno (DNI): [_________________]  │
-│  Año:          [2026             ]  │
-│  Monto:        [_________________]  │
-│                                     │
-│  Valor anual configurado: $20000    │
-│                                     │
-│       [Cancelar]  [Registrar]       │
-└─────────────────────────────────────┘
-```
-**Acción:** POST /api/pagos/pago-anual/
-
----
-
-## V13 — Configuración
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Configuración                                      │
+│  Estado de cuenta — Año [2026 ▼]                    │
 │                                                     │
-│  Cuotas mensuales — Año 2026                        │
-│  ┌──────┬────────┬────────────┐                     │
-│  │ Mes  │ Monto  │  Acciones  │                     │
-│  ├──────┼────────┼────────────┤                     │
-│  │ Mar  │ $2500  │ [Editar]   │                     │
-│  │ Abr  │ $2500  │ [Editar]   │                     │
-│  └──────┴────────┴────────────┘                     │
+│  Cuotas pagas:    Mar ✅  Abr ✅                    │
+│  Cuotas pendientes: May ⏳ Jun ⏳ Jul ⏳ ...         │
+│  Donaciones:      $500                              │
 │                                                     │
-│  Pago anual 2026: $20000        [Editar]            │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-## V14 — Detalle de Hijo (vista Padre)
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Pedro García — 3° A — 2026                         │
-│                                                     │
-│  Modalidad: Mensual                                 │
-│                                                     │
-│  Estado de cuotas:                                  │
-│  Mar ✅  Abr ✅  May ⏳  Jun ⏳  Jul ⏳             │
-│  Ago ⏳  Sep ⏳  Oct ⏳  Nov ⏳  Dic ⏳             │
-│                                                     │
-│  Historial de pagos:                                │
+│  Historial:                                         │
 │  ┌───────────┬──────────┬────────┬──────────────┐   │
 │  │  Fecha    │   Tipo   │  Mes   │    Monto     │   │
 │  ├───────────┼──────────┼────────┼──────────────┤   │
@@ -272,4 +198,146 @@
 │  └───────────┴──────────┴────────┴──────────────┘   │
 └─────────────────────────────────────────────────────┘
 ```
-**Datos:** GET /api/mis-hijos/ (incluye inscripciones y pagos)
+**Acceso:** PAD | **Ruta:** `/{slug}/estado-cuenta` | **Datos:** GET `/api/estado-cuenta/?anio=2026`
+
+---
+
+## V09 — Listado de Usuarios (Admin/TES)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Usuarios                          [+ Crear usuario]│
+├──────────┬──────────┬──────┬────────┬───────────────┤
+│ Nombre   │ Apellido │ DNI  │  Rol   │  Acciones     │
+├──────────┼──────────┼──────┼────────┼───────────────┤
+│ Carlos   │ López    │12345 │ SOC    │ [Editar][Baja]│
+│ Walter   │ Frías    │67890 │ PAD    │ [Editar][Baja]│
+└──────────┴──────────┴──────┴────────┴───────────────┘
+```
+**Acceso:** TES, ADMIN | **Ruta:** `/{slug}/usuarios` | **Datos:** GET `/api/usuarios/`
+
+---
+
+## V10 — Crear / Editar Usuario
+
+```
+┌────────────────────────────────────────────┐
+│  Crear Usuario                             │
+│                                            │
+│  Tipo: [● Padre/Tutor ○ Alumno ○ Miembro] │
+│                                            │
+│  Nombre:    [___________________]          │
+│  Apellido:  [___________________]          │
+│  DNI:       [___________________]          │
+│                                            │
+│  (si Padre/Tutor)                          │
+│  Email:     [___________________]          │
+│  Contraseña:[___________________]          │
+│                                            │
+│  (si Alumno)                               │
+│  DNI del padre: [________________]         │
+│  Grado:     [▼ Seleccionar grado ]         │
+│  Año:       [2026               ]          │
+│  Modalidad: [▼ Mensual / Anual  ]          │
+│                                            │
+│       [Cancelar]  [Guardar]               │
+└────────────────────────────────────────────┘
+```
+**Acceso:** TES, ADMIN | **Acción:** POST `/api/usuarios/crear/` | PUT `/api/usuarios/<uuid>/`
+
+---
+
+## V11 — Listado de Pagos
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Pagos             Filtros: Mes [▼]  Año [2026]  [Buscar]    │
+│                              [Pago simple] [Múltiple] [Anual]│
+├───────────────┬──────────┬─────┬──────┬────────┬────────────┤
+│  Alumno       │   Tipo   │ Mes │ Año  │ Monto  │  Token     │
+├───────────────┼──────────┼─────┼──────┼────────┼────────────┤
+│ Pedro García  │ Mensual  │ Mar │ 2026 │ $2500  │ ✅ COOP    │
+│ Pedro García  │ Mensual  │ Abr │ 2026 │ $2500  │ ✅ COOP    │
+└───────────────┴──────────┴─────┴──────┴────────┴────────────┘
+```
+**Acceso:** TES, ADMIN | **Ruta:** `/{slug}/pagos` | **Datos:** GET `/api/pagos/`
+
+---
+
+## V12 — Registrar Pago Simple
+
+```
+┌─────────────────────────────────────┐
+│  Pago Simple                        │
+│                                     │
+│  Alumno:  [▼ Seleccionar alumno  ]  │
+│  Mes:     [▼ Marzo               ]  │
+│  Año:     [2026                  ]  │
+│  Monto:   [_____________________]   │
+│                                     │
+│  Cuota del mes: $2500               │
+│                                     │
+│       [Cancelar]  [Registrar]       │
+└─────────────────────────────────────┘
+```
+**Acción:** POST `/api/pagos/pago-simple/`
+
+---
+
+## V13 — Registrar Pago Múltiple
+
+```
+┌─────────────────────────────────────┐
+│  Pago Múltiple                      │
+│                                     │
+│  Alumno:  [▼ Seleccionar alumno  ]  │
+│  Año:     [2026                  ]  │
+│  Meses:   [✓] Mar  [✓] Abr          │
+│           [ ] May  [ ] Jun          │
+│  Monto total: [__________________]  │
+│                                     │
+│  Total cuotas seleccionadas: $5000  │
+│                                     │
+│       [Cancelar]  [Registrar]       │
+└─────────────────────────────────────┘
+```
+**Acción:** POST `/api/pagos/pago-multiple/`
+
+---
+
+## V14 — Registrar Pago Anual
+
+```
+┌─────────────────────────────────────┐
+│  Pago Anual                         │
+│                                     │
+│  Alumno:  [▼ Seleccionar alumno  ]  │
+│  Año:     [2026                  ]  │
+│  Monto:   [_____________________]   │
+│                                     │
+│  Valor anual configurado: $20000    │
+│                                     │
+│       [Cancelar]  [Registrar]       │
+└─────────────────────────────────────┘
+```
+**Acción:** POST `/api/pagos/pago-anual/`
+
+---
+
+## V15 — Configuración
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Configuración — Año 2026                           │
+│                                                     │
+│  Cuotas mensuales                                   │
+│  ┌──────┬────────┬────────────┐                     │
+│  │ Mes  │ Monto  │  Acciones  │                     │
+│  ├──────┼────────┼────────────┤                     │
+│  │ Mar  │ $2500  │ [Editar]   │                     │
+│  │ Abr  │ $2500  │ [Editar]   │                     │
+│  └──────┴────────┴────────────┘   [+ Agregar mes]   │
+│                                                     │
+│  Pago anual 2026: $20000          [Editar]          │
+└─────────────────────────────────────────────────────┘
+```

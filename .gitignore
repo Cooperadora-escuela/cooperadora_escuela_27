@@ -77,6 +77,8 @@ coverage.xml
 .env.local
 .env.production
 .env.development
+.env.docker
+.env.saas
 
 # Docker
 *.pid
@@ -91,7 +93,9 @@ docker-compose.override.yml
 # Secrets
 *.key
 *.pem
+*.crt
 .secrets/
+back/certs/
 
 # Celery
 celerybeat-schedule

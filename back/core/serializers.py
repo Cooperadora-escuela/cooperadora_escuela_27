@@ -1,12 +1,12 @@
 # back/core/serializers.py
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, PublicacionImagen, MESES_CICLO  # noqa: F401
+from .models import Grado, Inscripcion, Pago, CuotaMensual, ConfiguracionAnual, Usuario, Publicacion, PublicacionImagen, MESES_CICLO, Cooperadora  # noqa: F401
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 
 class UsuarioSerializer(serializers.ModelSerializer):
     padre_email = serializers.SerializerMethodField()
@@ -19,8 +19,9 @@ class UsuarioSerializer(serializers.ModelSerializer):
         model = Usuario
         fields = ['uuid', 'email', 'dni', 'nombre', 'apellido',
                   'rol', 'telefono', 'activo', 'fecha_registro',
-                  'padre_email', 'padre_dni', 'padre_nombre', 'padre_apellido', 'dni_padre']
-        read_only_fields = ['uuid', 'fecha_registro']
+                  'padre_email', 'padre_dni', 'padre_nombre', 'padre_apellido', 'dni_padre',
+                  'wallet_address', 'key_revealed']
+        read_only_fields = ['uuid', 'fecha_registro', 'wallet_address', 'key_revealed']
 
     def get_padre_email(self, obj):
         return obj.padre.email if obj.padre else None
@@ -75,8 +76,13 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
         if rol == 'SOC':
             dni_padre = data.get('dni_padre')
             if dni_padre:
+                # Filtramos por cooperadora para no cruzar datos entre tenants
+                cooperadora = self.context.get('cooperadora')
+                qs = Usuario.objects.filter(dni=dni_padre, rol='PAD')
+                if cooperadora:
+                    qs = qs.filter(cooperadora=cooperadora)
                 try:
-                    data['padre'] = Usuario.objects.get(dni=dni_padre, rol='PAD')
+                    data['padre'] = qs.get()
                 except Usuario.DoesNotExist:
                     raise serializers.ValidationError(
                         {'dni_padre': f'No existe un padre/tutor con el DNI "{dni_padre}".'}
@@ -104,18 +110,20 @@ class UsuarioCreateSerializer(serializers.ModelSerializer):
         anio = validated_data.pop('anio', None)
         modalidad = validated_data.pop('modalidad', 'mensual')
 
-        user = super().create(validated_data)
-        if password:
-            user.set_password(password)
-            user.save()
+        with transaction.atomic():
+            user = super().create(validated_data)
+            if password:
+                user.set_password(password)
+                user.save(update_fields=['password'])
 
-        if grado and anio:
-            Inscripcion.objects.create(
-                usuario=user,
-                grado=grado,
-                anio=anio,
-                modalidad=modalidad,
-            )
+            if grado and anio:
+                Inscripcion.objects.create(
+                    usuario=user,
+                    grado=grado,
+                    cooperadora=user.cooperadora,
+                    anio=anio,
+                    modalidad=modalidad,
+                )
 
         return user
     
@@ -138,6 +146,21 @@ class UsuarioLoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+
+
+class RegistroCooperadoraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cooperadora
+        fields = ('numero_escuela', 'nombre', 'nombre_contacto', 'email_contacto')
+
+    def validate_numero_escuela(self, value):
+        if Cooperadora.objects.filter(numero_escuela=value).exists():
+            raise serializers.ValidationError('Ya existe una cooperadora registrada con ese número de escuela.')
+        return value
+
+    def create(self, validated_data):
+        validated_data['slug'] = f"escuela{validated_data['numero_escuela']}"
+        return super().create(validated_data)
 
 
 
@@ -224,8 +247,12 @@ class PagoSimpleSerializer(serializers.Serializer):
     monto_total = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     def validate(self, data):
+        cooperadora = self.context['request'].cooperadora
+
         try:
-            inscripcion = Inscripcion.objects.get(id=data['inscripcion_id'], anio=data['anio'])
+            inscripcion = Inscripcion.objects.get(
+                id=data['inscripcion_id'], anio=data['anio'], cooperadora=cooperadora
+            )
         except Inscripcion.DoesNotExist:
             raise serializers.ValidationError("Inscripción no encontrada para ese año.")
 
@@ -236,9 +263,11 @@ class PagoSimpleSerializer(serializers.Serializer):
             raise serializers.ValidationError("Ya existe un pago registrado para ese mes.")
 
         try:
-            cuota = CuotaMensual.objects.get(anio=data['anio'], mes=data['mes'], activa=True)
+            cuota = CuotaMensual.objects.get(
+                anio=data['anio'], mes=data['mes'], activa=True, cooperadora=cooperadora
+            )
         except CuotaMensual.DoesNotExist:
-            raise serializers.ValidationError(f"No hay cuota definida para ese mes y año.")
+            raise serializers.ValidationError("No hay cuota definida para ese mes y año.")
 
         self.context['inscripcion'] = inscripcion
         self.context['cuota'] = cuota
@@ -278,8 +307,11 @@ class PagoMultipleSerializer(serializers.Serializer):
         if inscripcion.modalidad != 'mensual':
             raise serializers.ValidationError("La inscripción no es de modalidad mensual, no se pueden pagar meses sueltos.")
 
-        # Validar que los meses tengan cuota definida
-        cuotas = CuotaMensual.objects.filter(anio=data['anio'], mes__in=data['meses'], activa=True)
+        # Validar que los meses tengan cuota definida (filtrado por cooperadora)
+        cooperadora = self.context['request'].cooperadora
+        cuotas = CuotaMensual.objects.filter(
+            anio=data['anio'], mes__in=data['meses'], activa=True, cooperadora=cooperadora
+        )
         if cuotas.count() != len(data['meses']):
             meses_faltantes = set(data['meses']) - set(cuotas.values_list('mes', flat=True))
             raise serializers.ValidationError(f"No hay cuota definida para los meses: {meses_faltantes}")

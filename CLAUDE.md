@@ -92,18 +92,27 @@ cd front && npm run build
 - No explicar conceptos básicos de React, TypeScript, Docker o Django
 - Priorizar claridad en decisiones de arquitectura y flujos de datos
 
-## Pendientes
+## Resuelto
 
-### Web3 Fase 1 — Wallet custodial para padres
+### Web3 Fase 1 — Wallet custodial para padres ✓
 Integración invisible con `CooperadoraToken` en Base Sepolia. Doc completa en `docs/flujos/web3_fase1.md`.
 
-**Estado actual (2026-05-12):**
-- `token_minteado` y `token_mint_tx` ya en modelo `Pago` (migración `0006`)
-- `core/signals.py` y `core/web3_client.py` creados
-- ABI en `core/abi/CooperadoraToken.json`
-- **Falta implementar:** campos `wallet_address` y `wallet_private_key_encrypted` en `Usuario` + signal de generación de wallet al crear PAD + command `retry_mint_tokens`
+- `wallet_address` y `wallet_private_key_encrypted` en `Usuario` (migración `0007`)
+- `core/signals.py`: genera wallet al crear PAD + mintea token al crear `Pago`
+- `core/web3_client.py`: `generar_wallet()` y `mint_token_padre()`
+- `core/management/commands/retry_mint_tokens.py`: reintenta pagos con `token_minteado=False`
+- `core/abi/CooperadoraDAO.json`: ABI del contrato DAO
+- `back/scripts/exportar_wallet_padre.py`: desencripta y muestra private key de un padre por DNI (para importar a MetaMask)
+- Flujo verificado end-to-end: crear PAD → wallet generada + registrada en DAO → registrar pago → 1 COOP minteado → visible en MetaMask y front de la DAO
+- **Gotchas resueltos:** el backend llama `DAO.mintTokenPadre()` (no `token.mint()` directamente — el owner del token es el DAO); gas limit 300_000 (estimado real ~222k); `user.save(update_fields=['password'])` para no pisar wallet_address; nonce `pending` para evitar colisiones en pagos simultáneos; `registrar_padre_en_dao()` al crear PAD es obligatorio antes de poder mintear
 
-## Resuelto
+## Contratos deployados (Base Sepolia)
+
+| Contrato | Address |
+|---|---|
+| CooperadoraToken (COOP) | `0xa6dba267ad78b5179b5cd1ced6fc80cbd5a7a7e0` |
+| CooperadoraDAO | `0x77c6740a2031fa0684ea88edc9c6019fa0e7bd2b` |
+| Backend wallet (mintAutorizado) | `0xA6EBAb87A0a5890A5abB8D9eFC93eE534878161C` |
 
 ### Imágenes en publicaciones — renderizado en producción ✓
 `imagen_portada` y galería (`PublicacionImagen`) funcionan correctamente. Cloudinary sirve las imágenes con URL `https://res.cloudinary.com/...` y se renderizan en el front.

@@ -1,43 +1,77 @@
 # Modelo Navegacional — Contextos Navegacionales
-**Sistema:** Gestión de Cooperadora Escolar N°27
+**Sistema:** CooperaApp — Gestión de Cooperadoras Escolares (SaaS Multi-tenant)
 
 ---
 
 ## Contextos definidos
 
-| ID   | Nombre                  | Rol              | Descripción |
-|------|-------------------------|------------------|-------------|
-| CN01 | Acceso público          | Anónimo          | Solo permite el login. Sin acceso a ninguna otra sección. |
-| CN02 | Panel Tesorero/Admin    | TES, ADMIN       | Acceso completo: usuarios, inscripciones, pagos, configuración. |
-| CN03 | Panel Padre             | PAD              | Solo puede ver sus hijos y el historial de pagos de cada uno. |
-| CN04 | Panel general           | PRES, SEC, REV, DOC, MIE | Solo lectura: puede ver listados de pagos e inscripciones. |
+| ID   | Nombre                    | Rol                  | Ruta base         | Descripción |
+|------|---------------------------|----------------------|-------------------|-------------|
+| CN00 | Landing pública           | Anónimo              | `/`               | Página de presentación. Acceso a login y registro de nueva cooperadora. |
+| CN01 | Registro cooperadora      | Anónimo              | `/register`       | Formulario de registro de nueva cooperadora. Sin autenticación. |
+| CN02 | Activación cooperadora    | Anónimo (con token)  | `/{slug}/activar` | Formulario para crear el usuario ADMIN de la cooperadora. Token de un solo uso. |
+| CN03 | Login cooperadora         | Anónimo              | `/{slug}/login`   | Login dentro del contexto del slug. |
+| CN04 | Panel Admin/Tesorero      | ADMIN, TES           | `/{slug}/`        | Acceso completo: usuarios, inscripciones, pagos, configuración, publicaciones. |
+| CN05 | Panel Secretario          | SEC                  | `/{slug}/`        | Publicaciones: crear, editar, eliminar, listar. |
+| CN06 | Panel Padre               | PAD                  | `/{slug}/`        | Ver hijos, estado de cuenta, publicaciones. Wallet reveal-once al primer login. |
+| CN07 | Panel general             | Otros roles          | `/{slug}/`        | Solo lectura: publicaciones. |
+| CN08 | Platform Admin            | superuser            | `/admin/`         | Django Admin. Gestión de cooperadoras, aprobación, acciones de suscripción. |
 
 ---
 
 ## Detalle de cada contexto
 
-### CN01 — Acceso público
-- Vista: Login
-- Transición: al autenticarse exitosamente redirige según el rol:
-  - TES/ADMIN → CN02
-  - PAD → CN03
-  - Resto → CN04
+### CN00 — Landing pública
+- Vista: Home sin sesión
+- Links: → CN01 (Registrar cooperadora), → CN03 (Login)
 
-### CN02 — Panel Tesorero/Admin
+### CN01 — Registro cooperadora
+- Vista: Formulario de registro
+- Acción: POST crea cooperadora en PENDING y notifica al platform admin
+- Transición: → página de confirmación "Tu solicitud fue enviada"
+
+### CN02 — Activación cooperadora
+- Vista: Formulario de activación (nombre, apellido, DNI, contraseña)
+- Condición: token UUID válido y no usado
+- Acción: crea usuario ADMIN, invalida token
+- Transición: → CN03 (login)
+
+### CN03 — Login cooperadora
+- Vista: Formulario de login
+- Condición: cooperadora con `tiene_acceso=True` (TRIAL o ACTIVE)
+- Transición al autenticarse:
+  - ADMIN/TES → CN04
+  - SEC → CN05
+  - PAD → CN06
+  - Otros → CN07
+
+### CN04 — Panel Admin/Tesorero
 Nodos disponibles:
-- Gestión de usuarios (listar, crear, editar, dar de baja)
-- Gestión de inscripciones (listar, crear, editar, eliminar)
-- Registro de pagos (pago simple, múltiple, anual)
+- Dashboard con cards de acceso rápido
+- Gestión de usuarios (listar, crear PAD/SOC, editar, dar de baja)
+- Gestión de inscripciones
+- Registro de pagos (simple, múltiple, anual)
 - Listado de pagos con filtros
-- Configuración de cuotas mensuales
-- Configuración de pago anual
+- Configuración de cuotas mensuales y pago anual
+- Publicaciones (heredado de SEC)
 
-### CN03 — Panel Padre
+### CN05 — Panel Secretario
 Nodos disponibles:
-- Ver mis hijos (listado de alumnos vinculados)
-- Ver detalle de hijo (inscripciones + historial de pagos)
+- Publicaciones: crear, editar, eliminar, listar
 
-### CN04 — Panel general (solo lectura)
+### CN06 — Panel Padre
 Nodos disponibles:
-- Listado de inscripciones
-- Listado de pagos con filtros
+- Home con WalletRevealBanner (si `wallet_address` existe y `key_revealed=False`)
+- Mis hijos (listado con link a estado de cuenta)
+- Estado de cuenta (cuotas del año por hijo)
+- Publicaciones (solo lectura)
+
+### CN07 — Panel general
+Nodos disponibles:
+- Publicaciones (solo lectura)
+
+### CN08 — Platform Admin (Django Admin)
+Nodos disponibles:
+- Listado y detalle de cooperadoras
+- Acciones: habilitar trial, activar anualidad, suspender, enviar bienvenida
+- Listado de usuarios (todos los tenants)

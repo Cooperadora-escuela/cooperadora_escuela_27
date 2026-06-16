@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contex/UserContex';
 import { useTheme } from '../contex/ThemeContext';
+import { useTenant } from '../contex/TenantContext';
 import Avatar from './Avatar';
 
 interface NavItem {
@@ -14,28 +15,30 @@ const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated, isAdmin, isPresidente, isTesorero, isPadre } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { slug, nombre, numeroEscuela } = useTenant();
 
   const canManage = isAdmin || isTesorero;
+  const p = (path: string) => `/${slug}${path}`;
 
   const navLinks: NavItem[] = [
-    { name: 'Inicio', path: '/about' },
+    { name: 'Inicio', path: p('/about') },
     ...(isPadre ? [
-      { name: 'Mis hijos', path: '/mis-hijos' },
-      { name: 'Estado de cuenta', path: '/estado-cuenta' },
-      { name: 'Publicaciones', path: '/publicaciones' },
+      { name: 'Mis hijos', path: p('/mis-hijos') },
+      { name: 'Estado de cuenta', path: p('/estado-cuenta') },
+      { name: 'Publicaciones', path: p('/publicaciones') },
     ] : canManage ? [
-      { name: 'Usuarios', path: '/usuarios' },
-      { name: 'Pagos', path: '/pagos' },
-      { name: 'Cuotas', path: '/cuotas' },
-      { name: 'Nuevo usuario', path: '/registro' },
-      { name: 'Publicaciones', path: '/publicaciones' },
+      { name: 'Usuarios', path: p('/usuarios') },
+      { name: 'Pagos', path: p('/pagos') },
+      { name: 'Cuotas', path: p('/cuotas') },
+      { name: 'Nuevo usuario', path: p('/registro') },
+      { name: 'Publicaciones', path: p('/publicaciones') },
     ] : isPresidente ? [
-      { name: 'Usuarios', path: '/usuarios' },
-      { name: 'Cuotas', path: '/cuotas' },
-      { name: 'Nuevo usuario', path: '/registro' },
-      { name: 'Publicaciones', path: '/publicaciones' },
+      { name: 'Usuarios', path: p('/usuarios') },
+      { name: 'Cuotas', path: p('/cuotas') },
+      { name: 'Nuevo usuario', path: p('/registro') },
+      { name: 'Publicaciones', path: p('/publicaciones') },
     ] : [
-      { name: 'Publicaciones', path: '/publicaciones' },
+      { name: 'Publicaciones', path: p('/publicaciones') },
     ]),
   ];
 
@@ -59,8 +62,8 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16">
 
           {/* Brand */}
-          <NavLink to="/about" className="text-xl font-bold text-cyan-500 shrink-0">
-            Cooperadora N°27
+          <NavLink to={`/${slug}/about`} className="text-xl font-bold text-cyan-500 shrink-0">
+            {numeroEscuela && nombre ? `Cooperadora - ${nombre} N°${numeroEscuela}` : 'CooperaApp'}
           </NavLink>
 
           {/* Desktop nav */}

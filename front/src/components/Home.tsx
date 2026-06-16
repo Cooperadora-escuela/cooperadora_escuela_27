@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contex/UserContex';
+import { useTenant } from '../contex/TenantContext';
+import WalletRevealBanner from './WalletRevealBanner';
 
 interface DashCard {
   icon: string;
@@ -26,6 +28,7 @@ const Card: React.FC<DashCard> = ({ icon, title, description, path, label }) => 
 
 const Home: React.FC = () => {
   const { isAuthenticated, isAdmin, isTesorero, isSecretario, isPadre, user } = useAuth();
+  const { slug } = useTenant();
 
   // Sin sesión: landing pública
   if (!isAuthenticated) {
@@ -65,21 +68,21 @@ const Home: React.FC = () => {
       icon: '👨‍👩‍👧‍👦',
       title: 'Mis hijos',
       description: 'Consultá la información de cada hijo: grado, inscripción y datos registrados.',
-      path: '/mis-hijos',
+      path: `/${slug}/mis-hijos`,
       label: 'Ver mis hijos',
     },
     {
       icon: '📋',
       title: 'Estado de cuenta',
       description: 'Revisá las cuotas pagas, pendientes y donaciones del año en curso.',
-      path: '/estado-cuenta',
+      path: `/${slug}/estado-cuenta`,
       label: 'Ver estado',
     },
     {
       icon: '📢',
       title: 'Publicaciones',
       description: 'Noticias, agenda y novedades de la cooperadora y la escuela.',
-      path: '/publicaciones',
+      path: `/${slug}/publicaciones`,
       label: 'Ver publicaciones',
     },
   ];
@@ -89,21 +92,21 @@ const Home: React.FC = () => {
       icon: '💳',
       title: 'Pagos',
       description: 'Registrá y consultá pagos de cuotas, pagos anuales y donaciones.',
-      path: '/pagos',
+      path: `/${slug}/pagos`,
       label: 'Ir a pagos',
     },
     {
       icon: '👤',
       title: 'Usuarios',
       description: 'Listado completo de usuarios registrados con opciones de edición.',
-      path: '/usuarios',
+      path: `/${slug}/usuarios`,
       label: 'Ver usuarios',
     },
     {
       icon: '➕',
       title: 'Nuevo usuario',
       description: 'Registrá un nuevo padre o alumno en el sistema.',
-      path: '/registro',
+      path: `/${slug}/registro`,
       label: 'Registrar',
     },
   ];
@@ -113,7 +116,7 @@ const Home: React.FC = () => {
       icon: '📢',
       title: 'Publicaciones',
       description: 'Creá y gestioná noticias, novedades y agenda para la comunidad educativa.',
-      path: '/publicaciones',
+      path: `/${slug}/publicaciones`,
       label: 'Gestionar',
     },
   ];
@@ -160,6 +163,11 @@ const Home: React.FC = () => {
         <h1 className="text-4xl font-extrabold text-gray-800 dark:text-gray-100 mb-2">{greeting}</h1>
         <p className="text-gray-500 text-lg">{subtitle}</p>
       </section>
+      {isPadre && user?.wallet_address && !user?.key_revealed && (
+        <div className="container mx-auto px-4 max-w-5xl">
+          <WalletRevealBanner />
+        </div>
+      )}
       <section className={`container mx-auto px-4 pb-16 grid gap-6 max-w-5xl ${
         cards.length === 1 ? 'max-w-sm' :
         cards.length === 2 ? 'md:grid-cols-2 max-w-3xl' :
