@@ -31,6 +31,8 @@ class Cooperadora(models.Model):
     nombre_contacto     = models.CharField(max_length=100, blank=True)
     activation_token    = models.UUIDField(null=True, blank=True)
     creada_en           = models.DateTimeField(auto_now_add=True)
+    cuit                = models.CharField(max_length=13, blank=True, help_text="Formato: XX-XXXXXXXX-X")
+    afip_punto_venta    = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Número de punto de venta habilitado en AFIP")
 
     class Meta:
         db_table = 'cooperadoras'
@@ -122,9 +124,10 @@ class Usuario(AbstractUser):
         related_name='hijos',
         limit_choices_to={'rol': Rol.PADRE}
     )
-    wallet_address = models.CharField(max_length=42, null=True, blank=True)
+    cuil                         = models.CharField(max_length=13, blank=True, help_text="Formato: XX-XXXXXXXX-X")
+    wallet_address               = models.CharField(max_length=42, null=True, blank=True)
     wallet_private_key_encrypted = models.TextField(null=True, blank=True)
-    key_revealed = models.BooleanField(default=False)
+    key_revealed                 = models.BooleanField(default=False)
 
     # Configuración
     USERNAME_FIELD = 'email'
@@ -349,9 +352,13 @@ class Pago(models.Model):
     anio = models.PositiveIntegerField()  # Año del pago (debe coincidir con inscripción)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_pago = models.DateTimeField(auto_now_add=True)
-    observaciones = models.TextField(blank=True)
-    token_minteado = models.BooleanField(default=False)
-    token_mint_tx = models.CharField(max_length=66, null=True, blank=True)
+    observaciones              = models.TextField(blank=True)
+    token_minteado             = models.BooleanField(default=False)
+    token_mint_tx              = models.CharField(max_length=66, null=True, blank=True)
+    factura_emitida            = models.BooleanField(default=False)
+    factura_numero             = models.PositiveIntegerField(null=True, blank=True)
+    factura_cae                = models.CharField(max_length=14, null=True, blank=True)
+    factura_vencimiento_cae    = models.DateField(null=True, blank=True)
 
     class Meta:
         constraints = [

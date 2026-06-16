@@ -93,7 +93,9 @@ docker-compose.override.yml
 # Secrets
 *.key
 *.pem
+*.crt
 .secrets/
+back/certs/
 
 # Celery
 celerybeat-schedule

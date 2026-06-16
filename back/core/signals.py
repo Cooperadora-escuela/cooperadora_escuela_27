@@ -90,3 +90,43 @@ def mint_token_on_pago(sender, instance, created, **kwargs):
             logger.info("Pago anual id=%s: %d tokens minteados. Hashes: %s", instance.pk, len(tx_hashes), tx_hashes)
     except Exception:
         logger.exception("mint_token_padre falló para pago id=%s", instance.pk)
+
+
+@receiver(post_save, sender='core.Pago')
+def emitir_factura_on_pago(sender, instance, created, **kwargs):
+    if not created or instance.factura_emitida:
+        return
+    cooperadora = instance.inscripcion.cooperadora
+    if not cooperadora or not cooperadora.cuit or not cooperadora.afip_punto_venta:
+        logger.warning(
+            "Factura omitida para pago id=%s: cooperadora sin CUIT o punto_venta configurado",
+            instance.pk,
+        )
+        return
+    cuil = instance.inscripcion.usuario.cuil
+    if not cuil:
+        logger.warning(
+            "Factura omitida para pago id=%s: padre sin CUIL registrado",
+            instance.pk,
+        )
+        return
+    try:
+        from core.facturacion import emitir_factura
+        resultado = emitir_factura(
+            cuit_emisor=cooperadora.cuit,
+            punto_venta=cooperadora.afip_punto_venta,
+            cuil_receptor=cuil,
+            monto=float(instance.monto),
+        )
+        sender.objects.filter(pk=instance.pk).update(
+            factura_emitida=True,
+            factura_numero=resultado["numero"],
+            factura_cae=resultado["cae"],
+            factura_vencimiento_cae=resultado["vencimiento_cae"],
+        )
+        logger.info(
+            "Factura emitida para pago id=%s: N°%s CAE=%s",
+            instance.pk, resultado["numero"], resultado["cae"],
+        )
+    except Exception:
+        logger.exception("emitir_factura falló para pago id=%s", instance.pk)
