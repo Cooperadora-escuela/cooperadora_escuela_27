@@ -30,6 +30,31 @@ class CooperadoraAdmin(admin.ModelAdmin):
             obj.slug = f"escuela{obj.numero_escuela}"
         super().save_model(request, obj, form, change)
 
+    def _enviar_link_activacion(self, cooperadora, token, es_trial=False):
+        if not cooperadora.email_contacto:
+            return
+        link = f'{django_settings.FRONTEND_URL}/{cooperadora.slug}/activar?token={token}'
+        periodo = 'Tenés 30 días de prueba gratuita.' if es_trial else 'Tu suscripción anual ya está activa.'
+        send_mail(
+            subject='[CooperaApp] Activá tu cuenta',
+            message=(
+                f'Hola {cooperadora.nombre_contacto},\n\n'
+                f'Tu cooperadora "{cooperadora.nombre}" fue aprobada. '
+                f'{periodo}\n\n'
+                f'Para crear tu usuario administrador hacé clic en el siguiente enlace:\n\n'
+                f'{link}\n\n'
+                f'El enlace es de un solo uso.\n\n'
+                f'Saludos,\nEl equipo de CooperaApp'
+            ),
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[cooperadora.email_contacto],
+            fail_silently=True,
+        )
+
+    def _necesita_activacion(self, cooperadora):
+        """True si la cooperadora aún no tiene usuario ADMIN creado."""
+        return not cooperadora.usuarios.filter(rol='ADMIN').exists()
+
     @admin.action(description='Habilitar trial de 30 días')
     def habilitar_trial_30_dias(self, request, queryset):
         hoy = timezone.now().date()
@@ -39,35 +64,20 @@ class CooperadoraAdmin(admin.ModelAdmin):
             cooperadora.trial_until = hoy + timedelta(days=30)
             cooperadora.activation_token = token
             cooperadora.save(update_fields=['subscription_status', 'trial_until', 'activation_token'])
-
-            if cooperadora.email_contacto:
-                link = (
-                    f'{django_settings.FRONTEND_URL}/{cooperadora.slug}/activar'
-                    f'?token={token}'
-                )
-                send_mail(
-                    subject='[CooperaApp] Activá tu cuenta',
-                    message=(
-                        f'Hola {cooperadora.nombre_contacto},\n\n'
-                        f'Tu cooperadora "{cooperadora.nombre}" fue aprobada. '
-                        f'Tenés 30 días de prueba gratuita.\n\n'
-                        f'Para crear tu usuario administrador hacé clic en el siguiente enlace:\n\n'
-                        f'{link}\n\n'
-                        f'El enlace es de un solo uso.\n\n'
-                        f'Saludos,\nEl equipo de CooperaApp'
-                    ),
-                    from_email=django_settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[cooperadora.email_contacto],
-                    fail_silently=True,
-                )
+            if self._necesita_activacion(cooperadora):
+                self._enviar_link_activacion(cooperadora, token, es_trial=True)
 
     @admin.action(description='Activar suscripción anual (1 año desde hoy)')
     def activar_anualidad(self, request, queryset):
         hoy = timezone.now().date()
-        queryset.update(
-            subscription_status=SubscriptionStatus.ACTIVE,
-            subscription_expiry=hoy + timedelta(days=365),
-        )
+        for cooperadora in queryset:
+            token = uuid.uuid4()
+            cooperadora.subscription_status = SubscriptionStatus.ACTIVE
+            cooperadora.subscription_expiry = hoy + timedelta(days=365)
+            cooperadora.activation_token = token
+            cooperadora.save(update_fields=['subscription_status', 'subscription_expiry', 'activation_token'])
+            if self._necesita_activacion(cooperadora):
+                self._enviar_link_activacion(cooperadora, token, es_trial=False)
 
     @admin.action(description='Suspender')
     def suspender(self, request, queryset):
